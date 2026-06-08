@@ -1,4 +1,5 @@
 export type SocialPlatform = 'tiktok' | 'instagram' | 'youtube';
+export type AIToolId = 'ideas' | 'hooks' | 'script' | 'caption';
 
 export interface CreatorProfile {
   id: string;
