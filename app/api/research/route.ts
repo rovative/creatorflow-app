@@ -80,8 +80,11 @@ export async function POST(req: NextRequest) {
 
     let cards;
     try {
-      cards = JSON.parse(raw);
+      const stripped = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+      const match = stripped.match(/\[[\s\S]*\]/);
+      cards = JSON.parse(match ? match[0] : stripped);
     } catch {
+      console.error('Research parse error. Raw:', raw);
       return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 });
     }
 
