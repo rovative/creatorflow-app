@@ -54,7 +54,7 @@ export default function Dashboard() {
         {[
           { label: 'Scheduled posts', value: loading ? '—' : String(scheduledThisWeek), sub: 'This week' },
           { label: 'Published posts', value: loading ? '—' : String(publishedAllTime), sub: 'All time' },
-          { label: 'Connected platforms', value: '0', sub: 'Coming soon' },
+          { label: 'Drafts', value: loading ? '—' : String(posts.filter(p => p.status === 'draft').length), sub: 'In progress' },
         ].map((s) => (
           <div key={s.label} style={{
             backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
