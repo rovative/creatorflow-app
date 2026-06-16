@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createProfile, getProfiles, SocialPlatform } from '@/lib/profiles';
+import { supabase } from '@/lib/supabase';
 
 const PROFILE_EMOJIS = [
   '💪','🎮','💄','💰','🎵','💻','👗','🔥',
@@ -400,6 +401,16 @@ export default function OnboardingPage() {
           </>
         )}
       </div>
+
+      <button
+        onClick={async () => { await supabase.auth.signOut(); router.push('/sign-in'); }}
+        style={{
+          marginTop: 32, background: 'none', border: 'none', cursor: 'pointer',
+          fontSize: 12, color: 'var(--text-muted)',
+        }}
+      >
+        Sign out
+      </button>
     </main>
   );
 }

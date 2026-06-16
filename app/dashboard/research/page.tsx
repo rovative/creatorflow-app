@@ -17,6 +17,7 @@ export default function ResearchPage() {
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
   const [cooldown, setCooldown] = useState(0);
+  const [showCooldownWarning, setShowCooldownWarning] = useState(false);
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
@@ -43,13 +44,18 @@ export default function ResearchPage() {
       });
       const data = await res.json();
       if (res.status === 403) { setError('upgrade_required'); return; }
+      if (res.status === 429) { setError('rate_limited'); return; }
       if (!res.ok) { setError(data.error ?? 'Something went wrong'); return; }
       setCards(data.cards ?? []);
       setCooldown(60);
       if (cooldownTimer.current) clearInterval(cooldownTimer.current);
       cooldownTimer.current = setInterval(() => {
         setCooldown(prev => {
-          if (prev <= 1) { clearInterval(cooldownTimer.current!); return 0; }
+          if (prev <= 1) {
+            clearInterval(cooldownTimer.current!);
+            setShowCooldownWarning(false);
+            return 0;
+          }
           return prev - 1;
         });
       }, 1000);
@@ -145,31 +151,45 @@ export default function ResearchPage() {
       {/* Action buttons */}
       <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
         <button
-          onClick={() => { setActiveTopic(null); generate('brainstorm'); }}
-          disabled={loading || cooldown > 0}
+          onClick={() => {
+            if (cooldown > 0) { setShowCooldownWarning(true); return; }
+            setShowCooldownWarning(false);
+            setActiveTopic(null);
+            generate('brainstorm');
+          }}
+          disabled={loading}
           style={{
             padding: '11px 22px', borderRadius: 10, fontSize: 14, fontWeight: 700,
             border: '1px solid var(--border)', backgroundColor: 'var(--surface)',
-            color: 'var(--text)', cursor: loading || cooldown > 0 ? 'default' : 'pointer',
-            opacity: loading || cooldown > 0 ? 0.5 : 1,
+            color: 'var(--text)', cursor: loading ? 'default' : 'pointer',
+            opacity: loading ? 0.5 : 1,
           }}
         >
-          {loading ? 'Generating...' : cooldown > 0 ? `Wait ${cooldown}s` : '💡 Brainstorm Ideas'}
+          {loading ? 'Generating...' : '💡 Brainstorm Ideas'}
         </button>
         <button
-          onClick={() => { setActiveTopic(null); generate('research'); }}
-          disabled={loading || cooldown > 0}
+          onClick={() => {
+            if (cooldown > 0) { setShowCooldownWarning(true); return; }
+            setShowCooldownWarning(false);
+            setActiveTopic(null);
+            generate('research');
+          }}
+          disabled={loading}
           style={{
             padding: '11px 22px', borderRadius: 10, fontSize: 14, fontWeight: 800,
             border: 'none', backgroundColor: 'var(--primary)', color: '#000',
-            cursor: loading || cooldown > 0 ? 'default' : 'pointer',
-            opacity: loading || cooldown > 0 ? 0.5 : 1,
-            boxShadow: cooldown > 0 ? 'none' : '0 0 20px rgba(34,197,94,0.2)',
+            cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.5 : 1,
+            boxShadow: '0 0 20px rgba(34,197,94,0.2)',
           }}
         >
-          {loading ? 'Generating...' : cooldown > 0 ? `Wait ${cooldown}s` : '🔍 Refresh Research'}
+          {loading ? 'Generating...' : '🔍 Refresh Research'}
         </button>
       </div>
+      {showCooldownWarning && cooldown > 0 && (
+        <p style={{ fontSize: 13, color: '#FFB020', marginTop: -20, marginBottom: 24 }}>
+          ⏱ Ready again in {cooldown}s
+        </p>
+      )}
 
       {/* My Topics */}
       <div style={{ marginBottom: 32 }}>
@@ -235,6 +255,12 @@ export default function ResearchPage() {
             fontSize: 14, textDecoration: 'none',
           }}>Upgrade to Pro</a>
         </div>
+      ) : error === 'rate_limited' ? (
+        <div style={{
+          padding: '14px 18px', borderRadius: 12, marginBottom: 20,
+          backgroundColor: 'rgba(255,176,32,0.08)', border: '1px solid rgba(255,176,32,0.25)',
+          fontSize: 13, color: '#FFB020',
+        }}>You&apos;ve hit the hourly limit (10 generations). Try again in an hour.</div>
       ) : error ? (
         <div style={{
           padding: '14px 18px', borderRadius: 12, marginBottom: 20,

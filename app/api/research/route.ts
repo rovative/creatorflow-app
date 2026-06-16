@@ -46,6 +46,15 @@ export async function POST(req: NextRequest) {
     const tier = await getUserTier(supabase, user.id);
     if (tier !== 'pro') return NextResponse.json({ error: 'upgrade_required' }, { status: 403 });
 
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { count } = await supabase
+      .from('api_usage')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .eq('endpoint', 'research')
+      .gte('called_at', oneHourAgo);
+    if ((count ?? 0) >= 10) return NextResponse.json({ error: 'rate_limited' }, { status: 429 });
+
     const { profile, topic, mode } = await req.json() as {
       profile?: CreatorProfile;
       topic?: string;
@@ -88,6 +97,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Failed to parse AI response' }, { status: 500 });
     }
 
+    await supabase.from('api_usage').insert({ user_id: user.id, endpoint: 'research' });
     return NextResponse.json({ cards });
   } catch (e) {
     return NextResponse.json({ error: String(e) }, { status: 500 });

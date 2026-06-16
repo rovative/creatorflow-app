@@ -2,13 +2,24 @@
 
 import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 
 export default function Settings() {
   const router = useRouter();
+  const [resetting, setResetting] = useState(false);
 
   async function handleSignOut() {
     await supabase.auth.signOut();
     router.push('/sign-in');
+  }
+
+  async function handleResetOnboarding() {
+    if (!confirm('Delete all profiles and restart onboarding?')) return;
+    setResetting(true);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) await supabase.from('profiles').delete().eq('user_id', user.id);
+    localStorage.removeItem('cf_active_profile');
+    router.push('/onboarding');
   }
 
   return (
@@ -41,6 +52,23 @@ export default function Settings() {
             backgroundColor: 'transparent', color: 'var(--text-sub)',
           }}>
             Sign out
+          </button>
+        </div>
+
+        <div style={{
+          backgroundColor: 'rgba(255,176,32,0.05)', border: '1px solid rgba(255,176,32,0.2)',
+          borderRadius: 16, padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+        }}>
+          <div>
+            <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 2 }}>Reset onboarding</div>
+            <div style={{ fontSize: 13, color: 'var(--text-muted)' }}>Deletes all profiles — for testing only</div>
+          </div>
+          <button onClick={handleResetOnboarding} disabled={resetting} style={{
+            padding: '8px 18px', borderRadius: 8, fontSize: 13, fontWeight: 700,
+            cursor: resetting ? 'default' : 'pointer', border: '1px solid rgba(255,176,32,0.4)',
+            backgroundColor: 'transparent', color: '#FFB020', opacity: resetting ? 0.5 : 1,
+          }}>
+            {resetting ? 'Resetting…' : 'Reset'}
           </button>
         </div>
       </div>
