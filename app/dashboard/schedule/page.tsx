@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { ScheduledPost, getPosts, createPost, updatePost, deletePost, formatScheduledDate } from '@/lib/posts';
 import PostModal from '@/components/PostModal';
 import { supabase } from '@/lib/supabase';
+import { getActiveProfile, CreatorProfile } from '@/lib/profiles';
 
 type Filter = 'all' | 'scheduled' | 'draft' | 'published';
 type View = 'list' | 'calendar';
@@ -48,12 +49,16 @@ export default function SchedulePage() {
   const [editingPost, setEditingPost] = useState<ScheduledPost | undefined>();
   const [limitError, setLimitError] = useState(false);
   const [tier, setTier] = useState<string>('free');
+  const [profile, setProfile] = useState<CreatorProfile | null>(null);
 
   const today = new Date();
   const [current, setCurrent] = useState({ month: today.getMonth(), year: today.getFullYear() });
 
   useEffect(() => {
-    getPosts().then(setPosts);
+    getActiveProfile().then(p => {
+      setProfile(p);
+      if (p) getPosts(p.id).then(setPosts);
+    });
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       supabase.from('user_tiers').select('tier').eq('user_id', user.id).single()
@@ -61,12 +66,12 @@ export default function SchedulePage() {
     });
   }, []);
 
-  async function refresh() { setPosts(await getPosts()); }
+  async function refresh() { if (profile) setPosts(await getPosts(profile.id)); }
 
   async function handleSave(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
     try {
       if (editingPost) { await updatePost({ ...editingPost, ...data }); }
-      else { await createPost(data); }
+      else { await createPost(data, profile?.id ?? ''); }
       setLimitError(false);
     } catch (e) {
       if (e instanceof Error && e.message === 'POST_LIMIT_REACHED') {
@@ -85,7 +90,7 @@ export default function SchedulePage() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(18, 0, 0, 0);
     try {
-      await createPost({ ...post, status: 'draft', scheduledDate: tomorrow.toISOString() });
+      await createPost({ ...post, status: 'draft', scheduledDate: tomorrow.toISOString() }, profile?.id ?? '');
       setLimitError(false);
     } catch (e) {
       if (e instanceof Error && e.message === 'POST_LIMIT_REACHED') { setLimitError(true); return; }

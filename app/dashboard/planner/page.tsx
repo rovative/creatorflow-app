@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ScheduledPost, getPosts, createPost, updatePost, deletePost } from '@/lib/posts';
 import PostModal from '@/components/PostModal';
+import { getActiveProfile, CreatorProfile } from '@/lib/profiles';
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -27,17 +28,23 @@ export default function Planner() {
   const [showModal, setShowModal] = useState(false);
   const [editingPost, setEditingPost] = useState<ScheduledPost | undefined>();
   const [limitError, setLimitError] = useState(false);
+  const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const today = new Date();
   const [current, setCurrent] = useState({ month: today.getMonth(), year: today.getFullYear() });
 
-  useEffect(() => { getPosts().then(setPosts); }, []);
+  useEffect(() => {
+    getActiveProfile().then(p => {
+      setProfile(p);
+      if (p) getPosts(p.id).then(setPosts);
+    });
+  }, []);
 
-  async function refresh() { setPosts(await getPosts()); }
+  async function refresh() { if (profile) setPosts(await getPosts(profile.id)); }
 
   async function handleSave(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
     try {
       if (editingPost) await updatePost({ ...editingPost, ...data });
-      else await createPost(data);
+      else await createPost(data, profile?.id ?? '');
       setLimitError(false);
     } catch (e) {
       if (e instanceof Error && e.message === 'POST_LIMIT_REACHED') { setLimitError(true); return; }

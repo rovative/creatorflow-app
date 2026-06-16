@@ -43,16 +43,17 @@ function postToDb(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
   };
 }
 
-export async function getPosts(): Promise<ScheduledPost[]> {
+export async function getPosts(profileId: string): Promise<ScheduledPost[]> {
   const { data, error } = await supabase
     .from('posts')
     .select('*')
+    .eq('profile_id', profileId)
     .order('scheduled_date', { ascending: true });
   if (error) { console.error('getPosts:', error.message); return []; }
   return (data ?? []).map(dbToPost);
 }
 
-export async function createPost(data: Omit<ScheduledPost, 'id' | 'createdAt'>): Promise<ScheduledPost | null> {
+export async function createPost(data: Omit<ScheduledPost, 'id' | 'createdAt'>, profileId: string): Promise<ScheduledPost | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
 
@@ -73,7 +74,7 @@ export async function createPost(data: Omit<ScheduledPost, 'id' | 'createdAt'>):
 
   const { data: row, error } = await supabase
     .from('posts')
-    .insert({ ...postToDb(data), user_id: user.id })
+    .insert({ ...postToDb(data), user_id: user.id, profile_id: profileId })
     .select()
     .single();
   if (error) { console.error('createPost:', error.message); return null; }
