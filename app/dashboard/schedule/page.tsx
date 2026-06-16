@@ -31,14 +31,22 @@ export default function SchedulePage() {
   const [filter, setFilter] = useState<Filter>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingPost, setEditingPost] = useState<ScheduledPost | undefined>();
+  const [limitError, setLimitError] = useState(false);
 
   useEffect(() => { getPosts().then(setPosts); }, []);
 
   async function refresh() { setPosts(await getPosts()); }
 
   async function handleSave(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
-    if (editingPost) { await updatePost({ ...editingPost, ...data }); }
-    else { await createPost(data); }
+    try {
+      if (editingPost) { await updatePost({ ...editingPost, ...data }); }
+      else { await createPost(data); }
+      setLimitError(false);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'POST_LIMIT_REACHED') {
+        setLimitError(true); return;
+      }
+    }
     await refresh();
   }
 
@@ -50,7 +58,12 @@ export default function SchedulePage() {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(18, 0, 0, 0);
-    await createPost({ ...post, status: 'draft', scheduledDate: tomorrow.toISOString() });
+    try {
+      await createPost({ ...post, status: 'draft', scheduledDate: tomorrow.toISOString() });
+      setLimitError(false);
+    } catch (e) {
+      if (e instanceof Error && e.message === 'POST_LIMIT_REACHED') { setLimitError(true); return; }
+    }
     await refresh();
   }
 
@@ -152,6 +165,28 @@ export default function SchedulePage() {
               — {nextPost.caption}
             </span>
           )}
+        </div>
+      )}
+
+      {/* Free plan limit banner */}
+      {limitError && (
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          padding: '14px 18px', borderRadius: 12, marginBottom: 20,
+          backgroundColor: 'rgba(255,71,87,0.08)', border: '1px solid rgba(255,71,87,0.3)',
+        }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#FF4757', marginBottom: 2 }}>
+              3-post limit reached
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+              Free plan is limited to 3 scheduled or draft posts at a time.
+            </p>
+          </div>
+          <a href="/dashboard/settings" style={{
+            padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 800,
+            backgroundColor: 'var(--primary)', color: '#000', textDecoration: 'none',
+          }}>Upgrade</a>
         </div>
       )}
 

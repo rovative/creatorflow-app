@@ -52,6 +52,22 @@ export async function getPosts(): Promise<ScheduledPost[]> {
 export async function createPost(data: Omit<ScheduledPost, 'id' | 'createdAt'>): Promise<ScheduledPost | null> {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
+
+  const { data: tierRow } = await supabase
+    .from('user_tiers')
+    .select('tier')
+    .eq('user_id', user.id)
+    .single();
+
+  if ((tierRow?.tier ?? 'free') === 'free') {
+    const { count } = await supabase
+      .from('posts')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', user.id)
+      .in('status', ['draft', 'scheduled']);
+    if ((count ?? 0) >= 3) throw new Error('POST_LIMIT_REACHED');
+  }
+
   const { data: row, error } = await supabase
     .from('posts')
     .insert({ ...postToDb(data), user_id: user.id })

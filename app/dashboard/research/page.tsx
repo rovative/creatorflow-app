@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getActiveProfile, CreatorProfile } from '@/lib/profiles';
 import { getTopics, addTopic, removeTopic, getSavedIdeas, saveIdea, deleteSavedIdea, OpportunityCard } from '@/lib/research';
 
@@ -16,6 +16,8 @@ export default function ResearchPage() {
   const [topicInput, setTopicInput] = useState('');
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     getActiveProfile().then(setProfile);
@@ -43,6 +45,14 @@ export default function ResearchPage() {
       if (res.status === 403) { setError('upgrade_required'); return; }
       if (!res.ok) { setError(data.error ?? 'Something went wrong'); return; }
       setCards(data.cards ?? []);
+      setCooldown(60);
+      if (cooldownTimer.current) clearInterval(cooldownTimer.current);
+      cooldownTimer.current = setInterval(() => {
+        setCooldown(prev => {
+          if (prev <= 1) { clearInterval(cooldownTimer.current!); return 0; }
+          return prev - 1;
+        });
+      }, 1000);
     } catch {
       setError('Request failed. Check your connection.');
     } finally {
@@ -136,26 +146,28 @@ export default function ResearchPage() {
       <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
         <button
           onClick={() => { setActiveTopic(null); generate('brainstorm'); }}
-          disabled={loading}
+          disabled={loading || cooldown > 0}
           style={{
             padding: '11px 22px', borderRadius: 10, fontSize: 14, fontWeight: 700,
             border: '1px solid var(--border)', backgroundColor: 'var(--surface)',
-            color: 'var(--text)', cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
+            color: 'var(--text)', cursor: loading || cooldown > 0 ? 'default' : 'pointer',
+            opacity: loading || cooldown > 0 ? 0.5 : 1,
           }}
         >
-          💡 Brainstorm Ideas
+          {loading ? 'Generating...' : cooldown > 0 ? `Wait ${cooldown}s` : '💡 Brainstorm Ideas'}
         </button>
         <button
           onClick={() => { setActiveTopic(null); generate('research'); }}
-          disabled={loading}
+          disabled={loading || cooldown > 0}
           style={{
             padding: '11px 22px', borderRadius: 10, fontSize: 14, fontWeight: 800,
             border: 'none', backgroundColor: 'var(--primary)', color: '#000',
-            cursor: loading ? 'default' : 'pointer', opacity: loading ? 0.6 : 1,
-            boxShadow: '0 0 20px rgba(34,197,94,0.2)',
+            cursor: loading || cooldown > 0 ? 'default' : 'pointer',
+            opacity: loading || cooldown > 0 ? 0.5 : 1,
+            boxShadow: cooldown > 0 ? 'none' : '0 0 20px rgba(34,197,94,0.2)',
           }}
         >
-          🔍 Refresh Research
+          {loading ? 'Generating...' : cooldown > 0 ? `Wait ${cooldown}s` : '🔍 Refresh Research'}
         </button>
       </div>
 
