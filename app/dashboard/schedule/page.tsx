@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { ScheduledPost, getPosts, createPost, updatePost, deletePost, formatScheduledDate } from '@/lib/posts';
 import PostModal from '@/components/PostModal';
+import { supabase } from '@/lib/supabase';
 
 type Filter = 'all' | 'scheduled' | 'draft' | 'published';
 type View = 'list' | 'calendar';
@@ -46,11 +47,19 @@ export default function SchedulePage() {
   const [showModal, setShowModal] = useState(false);
   const [editingPost, setEditingPost] = useState<ScheduledPost | undefined>();
   const [limitError, setLimitError] = useState(false);
+  const [tier, setTier] = useState<string>('free');
 
   const today = new Date();
   const [current, setCurrent] = useState({ month: today.getMonth(), year: today.getFullYear() });
 
-  useEffect(() => { getPosts().then(setPosts); }, []);
+  useEffect(() => {
+    getPosts().then(setPosts);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase.from('user_tiers').select('tier').eq('user_id', user.id).single()
+        .then(({ data }) => { if (data?.tier) setTier(data.tier); });
+    });
+  }, []);
 
   async function refresh() { setPosts(await getPosts()); }
 
@@ -252,22 +261,31 @@ export default function SchedulePage() {
       {view === 'list' && (
         <>
           {/* Stats row */}
-          <div style={{
-            display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
-            backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
-            borderRadius: 14, overflow: 'hidden', marginBottom: 20,
-          }}>
-            {[
-              { label: 'Total', value: posts.length, color: 'var(--text)' },
-              { label: 'Scheduled', value: scheduledCount, color: '#22c55e' },
-              { label: 'Drafts', value: draftCount, color: '#FFB020' },
-            ].map((s, i) => (
-              <div key={s.label} style={{ padding: '18px 24px', textAlign: 'center', borderLeft: i > 0 ? '1px solid var(--border)' : 'none' }}>
-                <div style={{ fontSize: 26, fontWeight: 900, color: s.color, marginBottom: 2 }}>{s.value}</div>
-                <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</div>
+          {(() => {
+            const activeCount = scheduledCount + draftCount;
+            const atLimit = tier === 'free' && activeCount >= 3;
+            return (
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
+                backgroundColor: 'var(--surface)', border: `1px solid ${atLimit ? 'rgba(255,71,87,0.3)' : 'var(--border)'}`,
+                borderRadius: 14, overflow: 'hidden', marginBottom: 20,
+              }}>
+                {[
+                  { label: 'Active', value: activeCount, color: atLimit ? '#FF4757' : 'var(--text)', limit: tier === 'free' },
+                  { label: 'Scheduled', value: scheduledCount, color: '#22c55e', limit: false },
+                  { label: 'Drafts', value: draftCount, color: '#FFB020', limit: false },
+                ].map((s, i) => (
+                  <div key={s.label} style={{ padding: '18px 24px', textAlign: 'center', borderLeft: i > 0 ? '1px solid var(--border)' : 'none' }}>
+                    <div style={{ fontSize: 26, fontWeight: 900, color: s.color, marginBottom: 2, display: 'flex', alignItems: 'baseline', justifyContent: 'center', gap: 2 }}>
+                      {s.value}
+                      {s.limit && <span style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-muted)' }}>/3</span>}
+                    </div>
+                    <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 500 }}>{s.label}</div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()}
 
           {/* Up next banner */}
           {nextPost && (
