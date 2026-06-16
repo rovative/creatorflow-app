@@ -72,6 +72,7 @@ export default function PostModal({ post, onSave, onClose }: Props) {
         }),
       });
       const data = await res.json();
+      if (res.status === 403) { setCaptionError('Caption AI is a Pro feature. Upgrade to unlock it.'); return; }
       if (!res.ok) { setCaptionError(data.error ?? 'Something went wrong'); return; }
       if (data.output) setCaption(data.output.trim());
     } catch {

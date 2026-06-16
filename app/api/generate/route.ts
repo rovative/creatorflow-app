@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AIToolId, CreatorProfile } from '@/lib/profiles';
+import { getAuthenticatedUser, getUserTier } from '@/lib/supabase-server';
 
 function buildProfileContext(profile?: CreatorProfile): string {
   if (!profile) return '';
@@ -65,6 +66,12 @@ function buildUserPrompt(toolId: AIToolId, inputs: Record<string, string>, profi
 
 export async function POST(req: NextRequest) {
   try {
+    const { user, supabase } = await getAuthenticatedUser();
+    if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+
+    const tier = await getUserTier(supabase, user.id);
+    if (tier !== 'pro') return NextResponse.json({ error: 'upgrade_required' }, { status: 403 });
+
     const { toolId, inputs, profile, customPrompt } = await req.json() as {
       toolId: AIToolId;
       inputs: Record<string, string>;

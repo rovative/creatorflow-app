@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { CreatorProfile } from '@/lib/profiles';
+import { getAuthenticatedUser, getUserTier } from '@/lib/supabase-server';
 
 function buildPrompt(profile: CreatorProfile | null, topic: string | null, mode: 'brainstorm' | 'research'): string {
   const profileCtx = profile ? `
@@ -39,6 +40,12 @@ Return ONLY the JSON array. No markdown, no explanation, no code blocks. Just th
 
 export async function POST(req: NextRequest) {
   try {
+    const { user, supabase } = await getAuthenticatedUser();
+    if (!user) return NextResponse.json({ error: 'unauthenticated' }, { status: 401 });
+
+    const tier = await getUserTier(supabase, user.id);
+    if (tier !== 'pro') return NextResponse.json({ error: 'upgrade_required' }, { status: 403 });
+
     const { profile, topic, mode } = await req.json() as {
       profile?: CreatorProfile;
       topic?: string;

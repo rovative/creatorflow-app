@@ -40,6 +40,7 @@ export default function ResearchPage() {
         body: JSON.stringify({ profile, topic: topic ?? null, mode }),
       });
       const data = await res.json();
+      if (res.status === 403) { setError('upgrade_required'); return; }
       if (!res.ok) { setError(data.error ?? 'Something went wrong'); return; }
       setCards(data.cards ?? []);
     } catch {
@@ -205,14 +206,30 @@ export default function ResearchPage() {
         </div>
       </div>
 
-      {/* Error */}
-      {error && (
+      {/* Error / Upgrade prompt */}
+      {error === 'upgrade_required' ? (
+        <div style={{
+          padding: '28px 24px', borderRadius: 16, marginBottom: 20, textAlign: 'center',
+          backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 12 }}>🔒</div>
+          <p style={{ fontWeight: 800, fontSize: 16, marginBottom: 6 }}>Pro Feature</p>
+          <p style={{ fontSize: 14, color: 'var(--text-sub)', marginBottom: 16, lineHeight: 1.5 }}>
+            AI-powered research is available on the Pro plan. Upgrade to unlock unlimited opportunity cards, brainstorm sessions, and caption generation.
+          </p>
+          <a href="/dashboard/settings" style={{
+            display: 'inline-block', padding: '10px 24px', borderRadius: 10,
+            backgroundColor: 'var(--primary)', color: '#000', fontWeight: 800,
+            fontSize: 14, textDecoration: 'none',
+          }}>Upgrade to Pro</a>
+        </div>
+      ) : error ? (
         <div style={{
           padding: '14px 18px', borderRadius: 12, marginBottom: 20,
           backgroundColor: 'rgba(255,71,87,0.08)', border: '1px solid rgba(255,71,87,0.25)',
           fontSize: 13, color: '#FF4757',
         }}>{error}</div>
-      )}
+      ) : null}
 
       {/* Loading */}
       {loading && (
