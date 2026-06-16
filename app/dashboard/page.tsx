@@ -53,11 +53,10 @@ export default function Dashboard() {
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 40 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, marginBottom: 40 }}>
         {[
           { label: 'Scheduled posts', value: loading ? '—' : String(scheduledThisWeek), sub: 'This week' },
           { label: 'Published posts', value: loading ? '—' : String(publishedAllTime), sub: 'All time' },
-          { label: 'Drafts', value: loading ? '—' : String(posts.filter(p => p.status === 'draft').length), sub: 'In progress' },
         ].map((s) => (
           <div key={s.label} style={{
             backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
