@@ -21,13 +21,21 @@ export default function ResearchPage() {
   const cooldownTimer = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
-    getActiveProfile().then(setProfile);
-    setTopics(getTopics());
-    setSavedIdeas(getSavedIdeas());
+    getActiveProfile().then(p => {
+      setProfile(p);
+      if (p) {
+        getTopics(p.id).then(setTopics);
+        getSavedIdeas(p.id).then(setSavedIdeas);
+      }
+    });
   }, []);
 
-  function refreshSaved() {
-    setSavedIdeas(getSavedIdeas());
+  async function refreshSaved() {
+    if (profile) setSavedIdeas(await getSavedIdeas(profile.id));
+  }
+
+  async function refreshTopics() {
+    if (profile) setTopics(await getTopics(profile.id));
   }
 
   async function generate(mode: Mode, topic?: string) {
@@ -66,17 +74,19 @@ export default function ResearchPage() {
     }
   }
 
-  function handleAddTopic() {
+  async function handleAddTopic() {
+    if (!profile) return;
     const t = topicInput.trim();
     if (!t) return;
-    addTopic(t);
-    setTopics(getTopics());
+    await addTopic(profile.id, t);
+    await refreshTopics();
     setTopicInput('');
   }
 
-  function handleRemoveTopic(t: string) {
-    removeTopic(t);
-    setTopics(getTopics());
+  async function handleRemoveTopic(t: string) {
+    if (!profile) return;
+    await removeTopic(profile.id, t);
+    await refreshTopics();
     if (activeTopic === t) setActiveTopic(null);
   }
 
@@ -85,8 +95,9 @@ export default function ResearchPage() {
     generate('research', t);
   }
 
-  function handleSaveIdea(card: OpportunityCard) {
-    saveIdea({
+  async function handleSaveIdea(card: OpportunityCard) {
+    if (!profile) return;
+    await saveIdea(profile.id, {
       opportunity: card.opportunity,
       whyItWorks: card.whyItWorks,
       contentIdea: card.contentIdea,
@@ -95,12 +106,12 @@ export default function ResearchPage() {
       platform: card.platform,
     });
     setSavedIds(prev => new Set(prev).add(card.opportunity));
-    refreshSaved();
+    await refreshSaved();
   }
 
-  function handleDeleteSaved(id: string) {
-    deleteSavedIdea(id);
-    refreshSaved();
+  async function handleDeleteSaved(id: string) {
+    await deleteSavedIdea(id);
+    await refreshSaved();
   }
 
   function handleSchedule(card: OpportunityCard) {
@@ -149,7 +160,7 @@ export default function ResearchPage() {
       )}
 
       {/* Action buttons */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 32 }}>
+      <div style={{ display: 'flex', gap: 12, marginBottom: showCooldownWarning && cooldown > 0 ? 12 : 32 }}>
         <button
           onClick={() => {
             if (cooldown > 0) { setShowCooldownWarning(true); return; }
@@ -186,7 +197,7 @@ export default function ResearchPage() {
         </button>
       </div>
       {showCooldownWarning && cooldown > 0 && (
-        <p style={{ fontSize: 13, color: '#FFB020', marginTop: -20, marginBottom: 24 }}>
+        <p style={{ fontSize: 13, color: '#FFB020', marginBottom: 24 }}>
           ⏱ Ready again in {cooldown}s
         </p>
       )}
@@ -361,7 +372,6 @@ function OpportunityCardView({ card, isSaved, onSave, onSchedule }: {
       backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
       borderRadius: 16, padding: '20px 24px',
     }}>
-      {/* Opportunity + platform */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, marginBottom: 12 }}>
         <div style={{ flex: 1 }}>
           <span style={{
@@ -376,7 +386,6 @@ function OpportunityCardView({ card, isSaved, onSave, onSchedule }: {
         }}>{card.platform}</span>
       </div>
 
-      {/* Content idea — the main thing */}
       <div style={{
         padding: '12px 16px', borderRadius: 10, marginBottom: 12,
         backgroundColor: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)',
@@ -385,7 +394,6 @@ function OpportunityCardView({ card, isSaved, onSave, onSchedule }: {
         <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--text)' }}>{card.contentIdea}</p>
       </div>
 
-      {/* Hook */}
       <div style={{
         fontSize: 13, color: 'var(--text-sub)', fontStyle: 'italic',
         padding: '10px 14px', borderRadius: 8, marginBottom: 12,
@@ -394,7 +402,6 @@ function OpportunityCardView({ card, isSaved, onSave, onSchedule }: {
         &ldquo;{card.hook}&rdquo;
       </div>
 
-      {/* Expandable details */}
       {expanded && (
         <div style={{ marginBottom: 12 }}>
           <div style={{ marginBottom: 8 }}>
@@ -408,7 +415,6 @@ function OpportunityCardView({ card, isSaved, onSave, onSchedule }: {
         </div>
       )}
 
-      {/* Actions */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid var(--border)' }}>
         <button onClick={() => setExpanded(e => !e)} style={{
           padding: '7px 14px', borderRadius: 8, fontSize: 12, fontWeight: 600,

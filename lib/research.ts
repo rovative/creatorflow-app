@@ -1,3 +1,5 @@
+import { supabase } from './supabase';
+
 export interface OpportunityCard {
   id: string;
   opportunity: string;
@@ -9,41 +11,62 @@ export interface OpportunityCard {
   createdAt: string;
 }
 
-const TOPICS_KEY = 'cf_research_topics';
-const SAVED_KEY = 'cf_saved_ideas';
-
-export function getTopics(): string[] {
-  try { return JSON.parse(localStorage.getItem(TOPICS_KEY) ?? '[]'); }
-  catch { return []; }
+export async function getTopics(profileId: string): Promise<string[]> {
+  const { data } = await supabase
+    .from('research_topics')
+    .select('topic')
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false });
+  return (data ?? []).map(r => r.topic);
 }
 
-export function addTopic(topic: string) {
-  const topics = getTopics();
-  if (!topics.includes(topic)) {
-    topics.unshift(topic);
-    localStorage.setItem(TOPICS_KEY, JSON.stringify(topics.slice(0, 20)));
-  }
+export async function addTopic(profileId: string, topic: string): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('research_topics').upsert(
+    { user_id: user.id, profile_id: profileId, topic },
+    { onConflict: 'user_id,profile_id,topic' }
+  );
 }
 
-export function removeTopic(topic: string) {
-  const topics = getTopics().filter(t => t !== topic);
-  localStorage.setItem(TOPICS_KEY, JSON.stringify(topics));
+export async function removeTopic(profileId: string, topic: string): Promise<void> {
+  await supabase.from('research_topics').delete()
+    .eq('profile_id', profileId).eq('topic', topic);
 }
 
-export function getSavedIdeas(): OpportunityCard[] {
-  try { return JSON.parse(localStorage.getItem(SAVED_KEY) ?? '[]'); }
-  catch { return []; }
+export async function getSavedIdeas(profileId: string): Promise<OpportunityCard[]> {
+  const { data } = await supabase
+    .from('saved_ideas')
+    .select('*')
+    .eq('profile_id', profileId)
+    .order('created_at', { ascending: false });
+  return (data ?? []).map(r => ({
+    id: r.id,
+    opportunity: r.opportunity,
+    whyItWorks: r.why_it_works ?? '',
+    contentIdea: r.content_idea ?? '',
+    hook: r.hook ?? '',
+    angle: r.angle ?? '',
+    platform: r.platform ?? '',
+    createdAt: r.created_at,
+  }));
 }
 
-export function saveIdea(card: Omit<OpportunityCard, 'id' | 'createdAt'>): OpportunityCard {
-  const idea: OpportunityCard = { ...card, id: crypto.randomUUID(), createdAt: new Date().toISOString() };
-  const ideas = getSavedIdeas();
-  ideas.unshift(idea);
-  localStorage.setItem(SAVED_KEY, JSON.stringify(ideas));
-  return idea;
+export async function saveIdea(profileId: string, card: Omit<OpportunityCard, 'id' | 'createdAt'>): Promise<void> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return;
+  await supabase.from('saved_ideas').insert({
+    user_id: user.id,
+    profile_id: profileId,
+    opportunity: card.opportunity,
+    why_it_works: card.whyItWorks,
+    content_idea: card.contentIdea,
+    hook: card.hook,
+    angle: card.angle,
+    platform: card.platform,
+  });
 }
 
-export function deleteSavedIdea(id: string) {
-  const ideas = getSavedIdeas().filter(i => i.id !== id);
-  localStorage.setItem(SAVED_KEY, JSON.stringify(ideas));
+export async function deleteSavedIdea(id: string): Promise<void> {
+  await supabase.from('saved_ideas').delete().eq('id', id);
 }
