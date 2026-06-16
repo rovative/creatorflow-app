@@ -6,9 +6,8 @@ import { usePathname } from 'next/navigation';
 const NAV = [
   { href: '/dashboard', label: 'Home' },
   { href: '/dashboard/schedule', label: 'Schedule' },
+  { href: '/dashboard/research', label: 'Research' },
   { href: '/dashboard/profiles', label: 'Profiles' },
-  { href: '/dashboard/trends', label: 'Trends' },
-  { href: '/dashboard/ai-studio', label: 'AI Studio' },
 ];
 
 export default function Sidebar() {

@@ -65,10 +65,11 @@ function buildUserPrompt(toolId: AIToolId, inputs: Record<string, string>, profi
 
 export async function POST(req: NextRequest) {
   try {
-    const { toolId, inputs, profile } = await req.json() as {
+    const { toolId, inputs, profile, customPrompt } = await req.json() as {
       toolId: AIToolId;
       inputs: Record<string, string>;
       profile?: CreatorProfile;
+      customPrompt?: string;
     };
 
     const apiKey = process.env.ANTHROPIC_API_KEY;
@@ -84,8 +85,8 @@ export async function POST(req: NextRequest) {
       body: JSON.stringify({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 1400,
-        system: buildSystemPrompt(toolId),
-        messages: [{ role: 'user', content: buildUserPrompt(toolId, inputs, profile) }],
+        system: customPrompt ? 'You are a social media caption expert. Return only the requested text, no explanation.' : buildSystemPrompt(toolId),
+        messages: [{ role: 'user', content: customPrompt ?? buildUserPrompt(toolId, inputs, profile) }],
       }),
     });
 

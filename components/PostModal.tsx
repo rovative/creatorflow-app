@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { ScheduledPost, ContentType, SocialPlatform } from '@/lib/posts';
+import { getActiveProfile } from '@/lib/profiles';
 import DateTimePicker from '@/components/DateTimePicker';
 
 const PLATFORMS: { id: SocialPlatform; label: string; color: string }[] = [
@@ -31,6 +32,8 @@ export default function PostModal({ post, onSave, onClose }: Props) {
   );
   const [dateVal, setDateVal] = useState('');
   const [timeVal, setTimeVal] = useState('');
+  const [captionLoading, setCaptionLoading] = useState(false);
+  const [captionError, setCaptionError] = useState('');
 
   useEffect(() => {
     if (post?.scheduledDate) {
@@ -46,6 +49,36 @@ export default function PostModal({ post, onSave, onClose }: Props) {
 
   function togglePlatform(id: SocialPlatform) {
     setPlatforms(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  }
+
+  async function handleCaptionAI(action: 'generate' | 'improve' | 'hashtags') {
+    setCaptionLoading(true);
+    setCaptionError('');
+    const profile = getActiveProfile();
+    const prompts = {
+      generate: `Write a single engaging social media caption for a ${contentType} post${caption ? ` about: "${caption}"` : ''}. Return only the caption text, no explanation.`,
+      improve: `Improve this social media caption to make it more engaging and compelling:\n\n"${caption}"\n\nReturn only the improved caption, no explanation.`,
+      hashtags: `Add 8-12 relevant hashtags to this caption:\n\n"${caption}"\n\nReturn the caption with hashtags appended, no explanation.`,
+    };
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          toolId: 'caption',
+          inputs: { topic: prompts[action] },
+          profile,
+          customPrompt: prompts[action],
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) { setCaptionError(data.error ?? 'Something went wrong'); return; }
+      if (data.output) setCaption(data.output.trim());
+    } catch {
+      setCaptionError('Request failed.');
+    } finally {
+      setCaptionLoading(false);
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -125,6 +158,30 @@ export default function PostModal({ post, onSave, onClose }: Props) {
                 outline: 'none', resize: 'vertical', fontFamily: 'inherit', lineHeight: 1.6,
               }}
             />
+            <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+              {([
+                { key: 'generate', label: '✨ Generate' },
+                { key: 'improve', label: '⚡ Improve' },
+                { key: 'hashtags', label: '# Add Hashtags' },
+              ] as const).map(btn => (
+                <button
+                  key={btn.key}
+                  type="button"
+                  onClick={() => handleCaptionAI(btn.key)}
+                  disabled={captionLoading || (btn.key !== 'generate' && !caption)}
+                  style={{
+                    padding: '6px 12px', borderRadius: 7, fontSize: 11, fontWeight: 700,
+                    border: '1px solid rgba(34,197,94,0.3)',
+                    backgroundColor: 'var(--primary-alpha)', color: 'var(--primary)',
+                    cursor: captionLoading || (btn.key !== 'generate' && !caption) ? 'default' : 'pointer',
+                    opacity: captionLoading || (btn.key !== 'generate' && !caption) ? 0.4 : 1,
+                  }}
+                >{captionLoading ? '...' : btn.label}</button>
+              ))}
+            </div>
+            {captionError && (
+              <p style={{ fontSize: 12, color: '#FF4757', marginTop: 6 }}>{captionError}</p>
+            )}
           </div>
 
           {/* Platforms */}
