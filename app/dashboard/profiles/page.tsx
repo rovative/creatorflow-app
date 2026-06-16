@@ -15,25 +15,29 @@ export default function ProfilesPage() {
   const [editing, setEditing] = useState<CreatorProfile | null>(null);
 
   useEffect(() => {
-    setProfiles(getProfiles());
-    setActiveId(getActiveProfile()?.id ?? null);
+    (async () => {
+      const [ps, active] = await Promise.all([getProfiles(), getActiveProfile()]);
+      setProfiles(ps);
+      setActiveId(active?.id ?? null);
+    })();
   }, []);
 
-  function refresh() {
-    setProfiles(getProfiles());
-    setActiveId(getActiveProfile()?.id ?? null);
+  async function refresh() {
+    const [ps, active] = await Promise.all([getProfiles(), getActiveProfile()]);
+    setProfiles(ps);
+    setActiveId(active?.id ?? null);
   }
 
-  function handleSave(data: Omit<CreatorProfile, 'id' | 'createdAt'>) {
-    if (editing) updateProfile({ ...editing, ...data });
-    else createProfile(data);
-    refresh();
+  async function handleSave(data: Omit<CreatorProfile, 'id' | 'createdAt'>) {
+    if (editing) await updateProfile({ ...editing, ...data });
+    else await createProfile(data);
+    await refresh();
   }
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!confirm('Delete this profile?')) return;
-    deleteProfile(id);
-    refresh();
+    await deleteProfile(id);
+    await refresh();
   }
 
   function handleSwitch(id: string) {

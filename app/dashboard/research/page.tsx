@@ -18,7 +18,7 @@ export default function ResearchPage() {
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    setProfile(getActiveProfile());
+    getActiveProfile().then(setProfile);
     setTopics(getTopics());
     setSavedIdeas(getSavedIdeas());
   }, []);

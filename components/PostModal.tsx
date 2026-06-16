@@ -54,7 +54,7 @@ export default function PostModal({ post, onSave, onClose }: Props) {
   async function handleCaptionAI(action: 'generate' | 'improve' | 'hashtags') {
     setCaptionLoading(true);
     setCaptionError('');
-    const profile = getActiveProfile();
+    const profile = await getActiveProfile();
     const prompts = {
       generate: `Write a single engaging social media caption for a ${contentType} post${caption ? ` about: "${caption}"` : ''}. Return only the caption text, no explanation.`,
       improve: `Improve this social media caption to make it more engaging and compelling:\n\n"${caption}"\n\nReturn only the improved caption, no explanation.`,

@@ -32,31 +32,31 @@ export default function SchedulePage() {
   const [showModal, setShowModal] = useState(false);
   const [editingPost, setEditingPost] = useState<ScheduledPost | undefined>();
 
-  useEffect(() => { setPosts(getPosts()); }, []);
+  useEffect(() => { getPosts().then(setPosts); }, []);
 
-  function refresh() { setPosts(getPosts()); }
+  async function refresh() { setPosts(await getPosts()); }
 
-  function handleSave(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
-    if (editingPost) { updatePost({ ...editingPost, ...data }); }
-    else { createPost(data); }
-    refresh();
+  async function handleSave(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
+    if (editingPost) { await updatePost({ ...editingPost, ...data }); }
+    else { await createPost(data); }
+    await refresh();
   }
 
-  function handleDelete(id: string) {
-    if (confirm('Delete this post?')) { deletePost(id); refresh(); }
+  async function handleDelete(id: string) {
+    if (confirm('Delete this post?')) { await deletePost(id); await refresh(); }
   }
 
-  function handleDuplicate(post: ScheduledPost) {
+  async function handleDuplicate(post: ScheduledPost) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(18, 0, 0, 0);
-    createPost({ ...post, status: 'draft', scheduledDate: tomorrow.toISOString() });
-    refresh();
+    await createPost({ ...post, status: 'draft', scheduledDate: tomorrow.toISOString() });
+    await refresh();
   }
 
-  function handleStatusToggle(post: ScheduledPost) {
-    updatePost({ ...post, status: post.status === 'draft' ? 'scheduled' : 'draft' });
-    refresh();
+  async function handleStatusToggle(post: ScheduledPost) {
+    await updatePost({ ...post, status: post.status === 'draft' ? 'scheduled' : 'draft' });
+    await refresh();
   }
 
   function openEdit(post: ScheduledPost) {
