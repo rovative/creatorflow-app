@@ -27,7 +27,7 @@ export default function SignUp() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push('/dashboard');
+      router.push('/onboarding');
     }
   }
 

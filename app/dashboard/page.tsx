@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { ScheduledPost, getPosts, formatScheduledDate } from '@/lib/posts';
+import { getProfiles } from '@/lib/profiles';
 
 const PLATFORM_COLORS: Record<string, string> = {
   instagram: '#E1306C',
@@ -11,12 +13,16 @@ const PLATFORM_COLORS: Record<string, string> = {
 };
 
 export default function Dashboard() {
+  const router = useRouter();
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    getProfiles().then(ps => {
+      if (ps.length === 0) { router.replace('/onboarding'); return; }
+    });
     getPosts().then(data => { setPosts(data); setLoading(false); });
-  }, []);
+  }, [router]);
 
   const now = new Date();
   const weekEnd = new Date(now); weekEnd.setDate(now.getDate() + 7);
