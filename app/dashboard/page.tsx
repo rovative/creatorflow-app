@@ -16,14 +16,17 @@ export default function Dashboard() {
   const router = useRouter();
   const [posts, setPosts] = useState<ScheduledPost[]>([]);
   const [loading, setLoading] = useState(true);
+  const [platforms, setPlatforms] = useState<string[]>([]);
 
   useEffect(() => {
     getProfiles().then(ps => {
       if (ps.length === 0) { router.replace('/onboarding'); return; }
     });
     getActiveProfile().then(p => {
-      if (p) getPosts(p.id).then(data => { setPosts(data); setLoading(false); });
-      else setLoading(false);
+      if (p) {
+        setPlatforms(p.platforms);
+        getPosts(p.id).then(data => { setPosts(data); setLoading(false); });
+      } else setLoading(false);
     });
   }, [router]);
 
@@ -54,7 +57,6 @@ export default function Dashboard() {
         {[
           { label: 'Scheduled posts', value: loading ? '—' : String(scheduledThisWeek), sub: 'This week' },
           { label: 'Published posts', value: loading ? '—' : String(publishedAllTime), sub: 'All time' },
-          { label: 'Connected platforms', value: '0', sub: 'Coming soon' },
         ].map((s) => (
           <div key={s.label} style={{
             backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
@@ -65,6 +67,28 @@ export default function Dashboard() {
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.sub}</div>
           </div>
         ))}
+        <div style={{
+          backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 16, padding: '24px',
+        }}>
+          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Platforms</div>
+          {platforms.length === 0 ? (
+            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>None in profile</div>
+          ) : (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {platforms.map(p => (
+                <span key={p} style={{
+                  fontSize: 11, fontWeight: 700, textTransform: 'capitalize',
+                  padding: '3px 10px', borderRadius: 100,
+                  color: PLATFORM_COLORS[p] ?? 'var(--text-muted)',
+                  backgroundColor: `${PLATFORM_COLORS[p] ?? '#666'}18`,
+                  border: `1px solid ${PLATFORM_COLORS[p] ?? '#666'}40`,
+                }}>{p}</span>
+              ))}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>Connection coming soon</div>
+        </div>
       </div>
 
       {/* Quick actions */}
