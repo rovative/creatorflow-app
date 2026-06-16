@@ -57,6 +57,7 @@ export default function Dashboard() {
         {[
           { label: 'Scheduled posts', value: loading ? '—' : String(scheduledThisWeek), sub: 'This week' },
           { label: 'Published posts', value: loading ? '—' : String(publishedAllTime), sub: 'All time' },
+          { label: 'Drafts', value: loading ? '—' : String(posts.filter(p => p.status === 'draft').length), sub: 'In progress' },
         ].map((s) => (
           <div key={s.label} style={{
             backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
@@ -67,28 +68,6 @@ export default function Dashboard() {
             <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>{s.sub}</div>
           </div>
         ))}
-        <div style={{
-          backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 16, padding: '24px',
-        }}>
-          <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Platforms</div>
-          {platforms.length === 0 ? (
-            <div style={{ fontSize: 12, color: 'var(--text-muted)' }}>None in profile</div>
-          ) : (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {platforms.map(p => (
-                <span key={p} style={{
-                  fontSize: 11, fontWeight: 700, textTransform: 'capitalize',
-                  padding: '3px 10px', borderRadius: 100,
-                  color: PLATFORM_COLORS[p] ?? 'var(--text-muted)',
-                  backgroundColor: `${PLATFORM_COLORS[p] ?? '#666'}18`,
-                  border: `1px solid ${PLATFORM_COLORS[p] ?? '#666'}40`,
-                }}>{p}</span>
-              ))}
-            </div>
-          )}
-          <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 10 }}>Connection coming soon</div>
-        </div>
       </div>
 
       {/* Quick actions */}
