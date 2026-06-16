@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { ScheduledPost, ContentType, SocialPlatform } from '@/lib/posts';
 import { getActiveProfile } from '@/lib/profiles';
+import { supabase } from '@/lib/supabase';
 import DateTimePicker from '@/components/DateTimePicker';
 
 const PLATFORMS: { id: SocialPlatform; label: string; color: string }[] = [
@@ -27,6 +28,9 @@ export default function PostModal({ post, onSave, onClose }: Props) {
   const [platforms, setPlatforms] = useState<SocialPlatform[]>(post?.platforms ?? []);
   const [contentType, setContentType] = useState<ContentType>(post?.contentType ?? 'video');
   const [mediaName, setMediaName] = useState(post?.mediaName ?? '');
+  const [mediaUrl, setMediaUrl] = useState(post?.mediaUrl ?? '');
+  const [mediaFile, setMediaFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState<'draft' | 'scheduled'>(
     post?.status === 'draft' ? 'draft' : 'scheduled'
   );
@@ -82,11 +86,33 @@ export default function PostModal({ post, onSave, onClose }: Props) {
     }
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMediaFile(file);
+    setMediaName(file.name);
+    setMediaUrl('');
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (platforms.length === 0) return alert('Select at least one platform.');
+
+    let uploadedUrl = mediaUrl;
+    if (mediaFile) {
+      setUploading(true);
+      const { data: { user } } = await supabase.auth.getUser();
+      const path = `${user?.id ?? 'anon'}/${Date.now()}_${mediaFile.name}`;
+      const { data, error } = await supabase.storage.from('post-media').upload(path, mediaFile, { upsert: false });
+      if (!error && data) {
+        const { data: { publicUrl } } = supabase.storage.from('post-media').getPublicUrl(data.path);
+        uploadedUrl = publicUrl;
+      }
+      setUploading(false);
+    }
+
     const scheduledDate = new Date(`${dateVal}T${timeVal}`).toISOString();
-    onSave({ caption, platforms, contentType, mediaName, scheduledDate, status });
+    onSave({ caption, platforms, contentType, mediaName, mediaUrl: uploadedUrl, scheduledDate, status });
     onClose();
   }
 
@@ -133,7 +159,7 @@ export default function PostModal({ post, onSave, onClose }: Props) {
               borderRadius: 12, padding: '24px', cursor: 'pointer', textAlign: 'center',
               flexDirection: 'column', gap: 6,
             }}>
-              <input type="file" accept="image/*,video/*" onChange={e => setMediaName(e.target.files?.[0]?.name ?? '')} style={{ display: 'none' }} />
+              <input type="file" accept="image/*,video/*" onChange={handleFileChange} style={{ display: 'none' }} />
               <span style={{ fontSize: 13, fontWeight: 600, color: mediaName ? 'var(--primary)' : 'var(--text-sub)' }}>
                 {mediaName || 'Click to upload photo or video'}
               </span>
@@ -238,10 +264,13 @@ export default function PostModal({ post, onSave, onClose }: Props) {
               flex: 1, padding: '12px', borderRadius: 10, fontSize: 14, fontWeight: 700,
               backgroundColor: 'var(--bg)', border: '1px solid var(--border)', color: 'var(--text-sub)', cursor: 'pointer',
             }}>Cancel</button>
-            <button type="submit" style={{
+            <button type="submit" disabled={uploading} style={{
               flex: 2, padding: '12px', borderRadius: 10, fontSize: 14, fontWeight: 800,
-              backgroundColor: 'var(--primary)', color: '#000', border: 'none', cursor: 'pointer',
-            }}>{post ? 'Save Changes' : status === 'scheduled' ? 'Schedule Post' : 'Save Draft'}</button>
+              backgroundColor: 'var(--primary)', color: '#000', border: 'none',
+              cursor: uploading ? 'default' : 'pointer', opacity: uploading ? 0.7 : 1,
+            }}>
+              {uploading ? 'Uploading media…' : post ? 'Save Changes' : status === 'scheduled' ? 'Schedule Post' : 'Save Draft'}
+            </button>
           </div>
         </form>
       </div>

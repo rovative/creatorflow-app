@@ -12,6 +12,7 @@ export interface ScheduledPost {
   scheduledDate: string;
   status: PostStatus;
   mediaName?: string;
+  mediaUrl?: string;
   createdAt: string;
 }
 
@@ -25,6 +26,7 @@ function dbToPost(row: any): ScheduledPost {
     scheduledDate: row.scheduled_date,
     status: row.status,
     mediaName: row.media_name ?? undefined,
+    mediaUrl: row.media_url ?? undefined,
     createdAt: row.created_at,
   };
 }
@@ -37,6 +39,7 @@ function postToDb(data: Omit<ScheduledPost, 'id' | 'createdAt'>) {
     scheduled_date: data.scheduledDate,
     status: data.status,
     media_name: data.mediaName ?? null,
+    media_url: data.mediaUrl ?? null,
   };
 }
 
