@@ -101,6 +101,22 @@ export default function Settings() {
           </button>
         </div>
 
+        {/* Legal */}
+        <div style={{
+          backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+          borderRadius: 16, padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 12,
+        }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase' }}>Legal</div>
+          <div style={{ display: 'flex', gap: 20 }}>
+            <a href="https://createaflow.app/terms" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'var(--text-sub)', textDecoration: 'none', fontWeight: 500 }}>
+              Terms of Service ↗
+            </a>
+            <a href="https://createaflow.app/privacy" target="_blank" rel="noopener noreferrer" style={{ fontSize: 14, color: 'var(--text-sub)', textDecoration: 'none', fontWeight: 500 }}>
+              Privacy Policy ↗
+            </a>
+          </div>
+        </div>
+
         {/* Reset onboarding */}
         <div style={{
           backgroundColor: 'rgba(255,176,32,0.05)', border: '1px solid rgba(255,176,32,0.2)',

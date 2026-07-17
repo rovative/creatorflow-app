@@ -105,7 +105,14 @@ export default function SignUp() {
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', color: 'var(--text-sub)', fontSize: 14, marginTop: 24 }}>
+        <p style={{ textAlign: 'center', color: 'var(--text-muted)', fontSize: 12, marginTop: 16, lineHeight: 1.6 }}>
+          By signing up, you agree to our{' '}
+          <a href="https://createaflow.app/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-sub)', textDecoration: 'underline' }}>Terms of Service</a>
+          {' '}and{' '}
+          <a href="https://createaflow.app/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--text-sub)', textDecoration: 'underline' }}>Privacy Policy</a>.
+        </p>
+
+        <p style={{ textAlign: 'center', color: 'var(--text-sub)', fontSize: 14, marginTop: 16 }}>
           Already have an account?{' '}
           <Link href="/sign-in" style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}>
             Sign in
