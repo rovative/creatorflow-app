@@ -1,8 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <!-- Background: dark rounded square -->
-  <rect width="512" height="512" rx="96" fill="#111111"/>
-  <!-- C: white ring arc, center=(208,256), outer r=105, inner r=63, opening ±45° -->
-  <path fill="white" d="M 282.2 181.8 A 105 105 0 1 0 282.2 330.2 L 252.5 300.5 A 63 63 0 1 1 252.5 211.5 Z"/>
-  <!-- F: green block letter, x:302–409, y:151–361, 40px bar thickness -->
-  <path fill="#22c55e" d="M 302 151 H 409 V 191 H 342 V 236 H 385 V 276 H 342 V 361 H 302 Z"/>
+  <rect width="512" height="512" rx="96" fill="#22c55e"/>
+  <path fill="#0a0a0a" d="M 282.2 181.8 A 105 105 0 1 0 282.2 330.2 L 252.5 300.5 A 63 63 0 1 1 252.5 211.5 Z"/>
+  <path fill="#0a0a0a" d="M 302 151 H 409 V 191 H 342 V 236 H 385 V 276 H 342 V 361 H 302 Z"/>
 </svg>
