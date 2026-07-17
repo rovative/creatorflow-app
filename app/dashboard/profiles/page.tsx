@@ -1,8 +1,16 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { CreatorProfile, getProfiles, createProfile, updateProfile, deleteProfile, getActiveProfile, setActiveProfile } from '@/lib/profiles';
 import EditProfileModal from '@/components/EditProfileModal';
+import { supabase } from '@/lib/supabase';
+
+type PlatformConnection = { id: string; platform: string; platform_username: string | null };
+
+const PLATFORM_ICONS: Record<string, string> = {
+  tiktok: '♪', instagram: '◈', youtube: '▶',
+};
 
 const PLATFORM_COLORS: Record<string, string> = {
   tiktok: '#FF004F', instagram: '#E1306C', youtube: '#FF0000',
@@ -13,6 +21,21 @@ export default function ProfilesPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<CreatorProfile | null>(null);
+  const [connections, setConnections] = useState<PlatformConnection[]>([]);
+  const [toast, setToast] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const connected = searchParams.get('connected');
+    const error = searchParams.get('error');
+    if (connected === 'tiktok') setToast('TikTok connected successfully!');
+    if (error) setToast(`Connection failed: ${error.replace(/_/g, ' ')}`);
+    if (connected || error) window.history.replaceState({}, '', '/dashboard/profiles');
+  }, [searchParams]);
+
+  useEffect(() => {
+    if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t); }
+  }, [toast]);
 
   useEffect(() => {
     (async () => {
@@ -21,6 +44,14 @@ export default function ProfilesPage() {
       setActiveId(active?.id ?? null);
     })();
   }, []);
+
+  useEffect(() => {
+    if (!activeId) return;
+    supabase.from('platform_connections')
+      .select('id, platform, platform_username')
+      .eq('profile_id', activeId)
+      .then(({ data }) => setConnections(data ?? []));
+  }, [activeId]);
 
   async function refresh() {
     const [ps, active] = await Promise.all([getProfiles(), getActiveProfile()]);
@@ -53,6 +84,14 @@ export default function ProfilesPage() {
 
   return (
     <div style={{ padding: '40px 48px', maxWidth: 900, margin: '0 auto' }}>
+      {toast && (
+        <div style={{
+          position: 'fixed', top: 24, right: 24, zIndex: 1000,
+          backgroundColor: toast.includes('failed') ? '#ff4757' : '#22c55e',
+          color: '#000', padding: '12px 20px', borderRadius: 12,
+          fontSize: 14, fontWeight: 700, boxShadow: '0 4px 20px rgba(0,0,0,0.3)',
+        }}>{toast}</div>
+      )}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
         <div>
           <h1 style={{ fontSize: 28, fontWeight: 900, letterSpacing: -0.5, marginBottom: 4 }}>Profiles</h1>
@@ -121,6 +160,50 @@ export default function ProfilesPage() {
                 </div>
                 <button onClick={() => openEdit(active)} style={actionBtnStyle}>Edit</button>
               </div>
+
+              {/* Platform connections */}
+              {active.platforms.length > 0 && (
+                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(34,197,94,0.15)' }}>
+                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>
+                    Connected accounts
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {active.platforms.map(platform => {
+                      const conn = connections.find(c => c.platform === platform);
+                      return (
+                        <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <span style={{
+                              width: 28, height: 28, borderRadius: 8, fontSize: 13,
+                              backgroundColor: `${PLATFORM_COLORS[platform]}18`,
+                              border: `1px solid ${PLATFORM_COLORS[platform]}40`,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              color: PLATFORM_COLORS[platform],
+                            }}>{PLATFORM_ICONS[platform]}</span>
+                            <div>
+                              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{platform}</div>
+                              {conn?.platform_username && (
+                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{conn.platform_username}</div>
+                              )}
+                            </div>
+                          </div>
+                          {conn ? (
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>Connected ✓</span>
+                          ) : platform === 'tiktok' ? (
+                            <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
+                              fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
+                              backgroundColor: '#FF004F18', color: '#FF004F',
+                              border: '1px solid #FF004F40', textDecoration: 'none',
+                            }}>Connect</a>
+                          ) : (
+                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Coming soon</span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
