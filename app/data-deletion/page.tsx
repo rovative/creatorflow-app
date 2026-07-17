@@ -11,11 +11,7 @@ function Content({ searchParams }: { searchParams: ReadonlyURLSearchParams }) {
       padding: '48px 24px', fontFamily: 'system-ui, sans-serif',
     }}>
       <div style={{ maxWidth: 560, width: '100%', textAlign: 'center' }}>
-        <div style={{
-          width: 56, height: 56, borderRadius: 14, backgroundColor: '#22c55e',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontSize: 24, fontWeight: 900, color: '#000', margin: '0 auto 28px',
-        }}>CF</div>
+        <img src="/logo.svg" alt="Creator Flow" width={56} height={56} style={{ display: 'block', margin: '0 auto 28px' }} />
 
         <h1 style={{ fontSize: 26, fontWeight: 900, marginBottom: 12 }}>Data Deletion Request</h1>
 

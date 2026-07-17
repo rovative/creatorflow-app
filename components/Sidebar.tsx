@@ -54,12 +54,7 @@ export default function Sidebar() {
     }}>
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28, paddingLeft: 8 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 10,
-          backgroundColor: 'var(--primary)', display: 'flex',
-          alignItems: 'center', justifyContent: 'center',
-          fontSize: 16, fontWeight: 900, color: '#000',
-        }}>CF</div>
+        <img src="/logo.svg" alt="Creator Flow" width={32} height={32} />
         <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: -0.3 }}>Creator Flow</span>
       </div>
 

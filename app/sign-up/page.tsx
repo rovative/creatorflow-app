@@ -39,12 +39,7 @@ export default function SignUp() {
     }}>
       <div style={{ width: '100%', maxWidth: 400 }}>
         <div style={{ textAlign: 'center', marginBottom: 40 }}>
-          <div style={{
-            width: 44, height: 44, borderRadius: 12,
-            backgroundColor: 'var(--primary)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px', fontWeight: 900, fontSize: 15, color: '#000',
-          }}>CF</div>
+          <img src="/logo.svg" alt="Creator Flow" width={44} height={44} style={{ display: 'block', margin: '0 auto 20px' }} />
           <h1 style={{ fontSize: 26, fontWeight: 800, letterSpacing: -0.5, marginBottom: 6 }}>Create your account</h1>
           <p style={{ color: 'var(--text-sub)', fontSize: 15 }}>Start scheduling in minutes — it&apos;s free</p>
         </div>

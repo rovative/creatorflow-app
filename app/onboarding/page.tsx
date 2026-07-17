@@ -101,12 +101,7 @@ export default function OnboardingPage() {
 
       {/* Logo */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 48 }}>
-        <div style={{
-          width: 36, height: 36, borderRadius: 10,
-          backgroundColor: 'var(--primary)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 900, fontSize: 13, color: '#000',
-        }}>CF</div>
+        <img src="/logo.svg" alt="Creator Flow" width={36} height={36} />
         <span style={{ fontWeight: 800, fontSize: 16 }}>Creator Flow</span>
       </div>
 
