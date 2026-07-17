@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CreatorProfile, getProfiles, createProfile, updateProfile, deleteProfile, getActiveProfile, setActiveProfile } from '@/lib/profiles';
 import EditProfileModal from '@/components/EditProfileModal';
@@ -16,6 +16,18 @@ const PLATFORM_COLORS: Record<string, string> = {
   tiktok: '#FF004F', instagram: '#E1306C', youtube: '#FF0000',
 };
 
+function SearchParamToast({ setToast }: { setToast: (msg: string) => void }) {
+  const searchParams = useSearchParams();
+  useEffect(() => {
+    const connected = searchParams.get('connected');
+    const error = searchParams.get('error');
+    if (connected === 'tiktok') setToast('TikTok connected successfully!');
+    if (error) setToast(`Connection failed: ${error.replace(/_/g, ' ')}`);
+    if (connected || error) window.history.replaceState({}, '', '/dashboard/profiles');
+  }, [searchParams, setToast]);
+  return null;
+}
+
 export default function ProfilesPage() {
   const [profiles, setProfiles] = useState<CreatorProfile[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -23,15 +35,6 @@ export default function ProfilesPage() {
   const [editing, setEditing] = useState<CreatorProfile | null>(null);
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [toast, setToast] = useState<string | null>(null);
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const connected = searchParams.get('connected');
-    const error = searchParams.get('error');
-    if (connected === 'tiktok') setToast('TikTok connected successfully!');
-    if (error) setToast(`Connection failed: ${error.replace(/_/g, ' ')}`);
-    if (connected || error) window.history.replaceState({}, '', '/dashboard/profiles');
-  }, [searchParams]);
 
   useEffect(() => {
     if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t); }
@@ -84,6 +87,9 @@ export default function ProfilesPage() {
 
   return (
     <div style={{ padding: '40px 48px', maxWidth: 900, margin: '0 auto' }}>
+      <Suspense>
+        <SearchParamToast setToast={(msg) => setToast(msg)} />
+      </Suspense>
       {toast && (
         <div style={{
           position: 'fixed', top: 24, right: 24, zIndex: 1000,
