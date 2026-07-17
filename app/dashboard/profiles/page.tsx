@@ -161,49 +161,47 @@ export default function ProfilesPage() {
                 <button onClick={() => openEdit(active)} style={actionBtnStyle}>Edit</button>
               </div>
 
-              {/* Platform connections */}
-              {active.platforms.length > 0 && (
-                <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(34,197,94,0.15)' }}>
-                  <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>
-                    Connected accounts
-                  </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {active.platforms.map(platform => {
-                      const conn = connections.find(c => c.platform === platform);
-                      return (
-                        <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                            <span style={{
-                              width: 28, height: 28, borderRadius: 8, fontSize: 13,
-                              backgroundColor: `${PLATFORM_COLORS[platform]}18`,
-                              border: `1px solid ${PLATFORM_COLORS[platform]}40`,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              color: PLATFORM_COLORS[platform],
-                            }}>{PLATFORM_ICONS[platform]}</span>
-                            <div>
-                              <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{platform}</div>
-                              {conn?.platform_username && (
-                                <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{conn.platform_username}</div>
-                              )}
-                            </div>
-                          </div>
-                          {conn ? (
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>Connected ✓</span>
-                          ) : platform === 'tiktok' ? (
-                            <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
-                              fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
-                              backgroundColor: '#FF004F18', color: '#FF004F',
-                              border: '1px solid #FF004F40', textDecoration: 'none',
-                            }}>Connect</a>
-                          ) : (
-                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Coming soon</span>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
+              {/* Platform connections — always visible */}
+              <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid rgba(34,197,94,0.15)' }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 12 }}>
+                  Connected accounts
                 </div>
-              )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {(['tiktok', 'instagram', 'youtube'] as const).map(platform => {
+                    const conn = connections.find(c => c.platform === platform);
+                    return (
+                      <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{
+                            width: 28, height: 28, borderRadius: 8, fontSize: 13,
+                            backgroundColor: `${PLATFORM_COLORS[platform]}18`,
+                            border: `1px solid ${PLATFORM_COLORS[platform]}40`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: PLATFORM_COLORS[platform],
+                          }}>{PLATFORM_ICONS[platform]}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{platform}</div>
+                            {conn?.platform_username && (
+                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{conn.platform_username}</div>
+                            )}
+                          </div>
+                        </div>
+                        {conn ? (
+                          <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>Connected ✓</span>
+                        ) : platform === 'tiktok' ? (
+                          <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
+                            fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
+                            backgroundColor: '#FF004F18', color: '#FF004F',
+                            border: '1px solid #FF004F40', textDecoration: 'none',
+                          }}>Connect</a>
+                        ) : (
+                          <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Coming soon</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </div>
           )}
 
