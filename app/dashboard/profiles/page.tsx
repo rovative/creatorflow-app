@@ -22,6 +22,7 @@ function SearchParamToast({ setToast }: { setToast: (msg: string) => void }) {
     const connected = searchParams.get('connected');
     const error = searchParams.get('error');
     if (connected === 'tiktok') setToast('TikTok connected successfully!');
+    if (connected === 'instagram') setToast('Instagram connected successfully!');
     if (error) setToast(`Connection failed: ${error.replace(/_/g, ' ')}`);
     if (connected || error) window.history.replaceState({}, '', '/dashboard/profiles');
   }, [searchParams, setToast]);
@@ -199,6 +200,12 @@ export default function ProfilesPage() {
                             fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
                             backgroundColor: '#FF004F18', color: '#FF004F',
                             border: '1px solid #FF004F40', textDecoration: 'none',
+                          }}>Connect</a>
+                        ) : platform === 'instagram' ? (
+                          <a href={`/api/auth/instagram?profileId=${active.id}`} style={{
+                            fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
+                            backgroundColor: '#E1306C18', color: '#E1306C',
+                            border: '1px solid #E1306C40', textDecoration: 'none',
                           }}>Connect</a>
                         ) : (
                           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>Coming soon</span>
