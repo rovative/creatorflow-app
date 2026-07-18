@@ -15,13 +15,13 @@ export async function GET(req: NextRequest) {
   const params = new URLSearchParams({
     client_id: appId,
     redirect_uri: redirectUri,
-    scope: 'instagram_business_basic',
+    scope: 'instagram_business_basic,instagram_business_content_publish',
     response_type: 'code',
     state,
   });
 
   const response = NextResponse.redirect(
-    `https://api.instagram.com/oauth/authorize?${params}`
+    `https://www.instagram.com/oauth/authorize?${params}`
   );
 
   response.cookies.set('instagram_oauth_state', JSON.stringify({ state, profileId }), {
