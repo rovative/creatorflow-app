@@ -293,6 +293,14 @@ export default function OnboardingPage() {
               }}>
                 {loading ? 'Saving...' : 'Next — Connect your accounts →'}
               </button>
+
+              <button type="button" onClick={() => router.push('/dashboard')} style={{
+                background: 'none', border: 'none', cursor: 'pointer',
+                fontSize: 13, color: 'var(--text-muted)', textDecoration: 'underline',
+                marginTop: 4, padding: '8px 0',
+              }}>
+                Skip for now
+              </button>
             </form>
           </>
         )}
