@@ -85,6 +85,17 @@ export default function SchedulePage() {
     if (confirm('Delete this post?')) { await deletePost(id); await refresh(); }
   }
 
+  async function handlePublish(id: string) {
+    const res = await fetch('/api/publish/tiktok', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ postId: id }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error ?? 'Publish failed'); }
+    await refresh();
+  }
+
   async function handleDuplicate(post: ScheduledPost) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -372,6 +383,7 @@ export default function SchedulePage() {
                   onDelete={() => handleDelete(post.id)}
                   onDuplicate={() => handleDuplicate(post)}
                   onToggleStatus={() => handleStatusToggle(post)}
+                  onPublish={() => handlePublish(post.id)}
                 />
               ))}
               <button onClick={() => setShowModal(true)} style={{
@@ -393,12 +405,13 @@ export default function SchedulePage() {
   );
 }
 
-function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus }: {
+function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPublish }: {
   post: ScheduledPost;
   onEdit: () => void;
   onDelete: () => void;
   onDuplicate: () => void;
   onToggleStatus: () => void;
+  onPublish: () => void;
 }) {
   const status = STATUS_CONFIG[post.status];
   const isEditable = post.status === 'draft' || post.status === 'scheduled';
@@ -460,6 +473,11 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus }: {
           {isEditable && (
             <button onClick={onToggleStatus} style={{ ...actionBtnStyle, color: post.status === 'draft' ? '#22c55e' : '#FFB020' }}>
               {post.status === 'draft' ? 'Schedule' : 'Move to draft'}
+            </button>
+          )}
+          {post.status === 'scheduled' && post.platforms.includes('tiktok') && (
+            <button onClick={onPublish} style={{ ...actionBtnStyle, color: '#FF004F', fontWeight: 700 }}>
+              Post Now
             </button>
           )}
           <div style={{ flex: 1 }} />
