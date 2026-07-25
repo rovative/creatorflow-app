@@ -8,13 +8,31 @@ import { supabase } from '@/lib/supabase';
 
 type PlatformConnection = { id: string; platform: string; platform_username: string | null };
 
-const PLATFORM_ICONS: Record<string, string> = {
-  tiktok: '♪', instagram: '◈', youtube: '▶',
-};
-
 const PLATFORM_COLORS: Record<string, string> = {
   tiktok: '#FF004F', instagram: '#E1306C', youtube: '#FF0000',
 };
+
+function PlatformLogo({ platform }: { platform: string }) {
+  if (platform === 'tiktok') return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16">
+      <path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-2.88 2.5 2.89 2.89 0 0 1-2.89-2.89 2.89 2.89 0 0 1 2.89-2.89c.28 0 .54.04.79.1V9.01a6.27 6.27 0 0 0-.79-.05 6.34 6.34 0 0 0-6.34 6.34 6.34 6.34 0 0 0 6.34 6.34 6.34 6.34 0 0 0 6.33-6.34V8.69a8.16 8.16 0 0 0 4.77 1.52V6.76a4.85 4.85 0 0 1-1-.07z"/>
+    </svg>
+  );
+  if (platform === 'instagram') return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" width="16" height="16">
+      <rect x="2" y="2" width="20" height="20" rx="5"/>
+      <circle cx="12" cy="12" r="4"/>
+      <circle cx="17.5" cy="6.5" r="0.8" fill="currentColor" stroke="none"/>
+    </svg>
+  );
+  if (platform === 'youtube') return (
+    <svg viewBox="0 0 24 24" width="16" height="16">
+      <path fill="currentColor" d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46a2.78 2.78 0 0 0-1.95 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/>
+      <polygon fill="white" points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02"/>
+    </svg>
+  );
+  return null;
+}
 
 function SearchParamToast({ setToast }: { setToast: (msg: string) => void }) {
   const searchParams = useSearchParams();
@@ -182,32 +200,35 @@ export default function ProfilesPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {(['tiktok', 'instagram', 'youtube'] as const).map(platform => {
                     const conn = connections.find(c => c.platform === platform);
+                    const color = PLATFORM_COLORS[platform];
                     return (
-                      <div key={platform} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                          <span style={{
-                            width: 28, height: 28, borderRadius: 8, fontSize: 13,
-                            backgroundColor: `${PLATFORM_COLORS[platform]}18`,
-                            border: `1px solid ${PLATFORM_COLORS[platform]}40`,
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            color: PLATFORM_COLORS[platform],
-                          }}>{PLATFORM_ICONS[platform]}</span>
-                          <div>
-                            <div style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{platform}</div>
-                            {conn?.platform_username && (
-                              <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>@{conn.platform_username}</div>
-                            )}
-                          </div>
+                      <div key={platform} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <div style={{
+                          width: 30, height: 30, borderRadius: 8, flexShrink: 0,
+                          backgroundColor: `${color}18`, border: `1px solid ${color}40`,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color,
+                        }}>
+                          <PlatformLogo platform={platform} />
                         </div>
+                        <span style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize', flex: 1 }}>{platform}</span>
                         {conn ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>Connected ✓</span>
-                            <button onClick={() => handleDisconnect(platform)} style={{
-                              fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
-                              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                              textDecoration: 'underline',
-                            }}>Disconnect</button>
-                          </div>
+                          <>
+                            {conn.platform_username && (
+                              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>@{conn.platform_username}</span>
+                            )}
+                            <span style={{ fontSize: 12, fontWeight: 600, color: '#22c55e' }}>Connected</span>
+                            <button
+                              onClick={() => confirm(`Disconnect ${platform}?`) && handleDisconnect(platform)}
+                              style={{
+                                width: 20, height: 20, borderRadius: 5, border: '1px solid var(--border)',
+                                backgroundColor: 'var(--surface-light)', color: 'var(--text-muted)',
+                                cursor: 'pointer', fontSize: 13, lineHeight: 1,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                padding: 0, flexShrink: 0,
+                              }}
+                            >×</button>
+                          </>
                         ) : platform === 'tiktok' ? (
                           <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
                             fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
