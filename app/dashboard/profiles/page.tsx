@@ -80,6 +80,12 @@ export default function ProfilesPage() {
     refresh();
   }
 
+  async function handleDisconnect(platform: string) {
+    if (!activeId) return;
+    await supabase.from('platform_connections').delete().eq('profile_id', activeId).eq('platform', platform);
+    setConnections(prev => prev.filter(c => c.platform !== platform));
+  }
+
   function openEdit(p: CreatorProfile) { setEditing(p); setShowModal(true); }
   function openNew() { setEditing(null); setShowModal(true); }
   function closeModal() { setShowModal(false); setEditing(null); }
@@ -194,7 +200,14 @@ export default function ProfilesPage() {
                           </div>
                         </div>
                         {conn ? (
-                          <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>Connected ✓</span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <span style={{ fontSize: 12, fontWeight: 700, color: '#22c55e' }}>Connected ✓</span>
+                            <button onClick={() => handleDisconnect(platform)} style={{
+                              fontSize: 11, fontWeight: 600, color: 'var(--text-muted)',
+                              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+                              textDecoration: 'underline',
+                            }}>Disconnect</button>
+                          </div>
                         ) : platform === 'tiktok' ? (
                           <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
                             fontSize: 12, fontWeight: 700, padding: '5px 12px', borderRadius: 7,
