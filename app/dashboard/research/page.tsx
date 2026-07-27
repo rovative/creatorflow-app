@@ -8,6 +8,7 @@ type Mode = 'brainstorm' | 'research';
 
 export default function ResearchPage() {
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
+  const [profileLoading, setProfileLoading] = useState(true);
   const [topics, setTopics] = useState<string[]>([]);
   const [savedIdeas, setSavedIdeas] = useState<OpportunityCard[]>([]);
   const [cards, setCards] = useState<OpportunityCard[]>([]);
@@ -23,6 +24,7 @@ export default function ResearchPage() {
   useEffect(() => {
     getActiveProfile().then(p => {
       setProfile(p);
+      setProfileLoading(false);
       if (p) {
         getTopics(p.id).then(setTopics);
         getSavedIdeas(p.id).then(setSavedIdeas);
@@ -149,7 +151,7 @@ export default function ResearchPage() {
       </div>
 
       {/* No profile warning */}
-      {!profile && (
+      {!profileLoading && !profile && (
         <div style={{
           padding: '14px 18px', borderRadius: 12, marginBottom: 28,
           backgroundColor: 'rgba(255,71,87,0.06)', border: '1px solid rgba(255,71,87,0.25)',

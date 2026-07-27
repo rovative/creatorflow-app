@@ -49,6 +49,7 @@ export default function SchedulePage() {
   const [editingPost, setEditingPost] = useState<ScheduledPost | undefined>();
   const [limitError, setLimitError] = useState(false);
   const [tier, setTier] = useState<string>('free');
+  const [tierLoading, setTierLoading] = useState(true);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
 
   const today = new Date();
@@ -62,7 +63,7 @@ export default function SchedulePage() {
     supabase.auth.getUser().then(({ data: { user } }) => {
       if (!user) return;
       supabase.from('user_tiers').select('tier').eq('user_id', user.id).single()
-        .then(({ data }) => { if (data?.tier) setTier(data.tier); });
+        .then(({ data }) => { if (data?.tier) setTier(data.tier); setTierLoading(false); });
     });
   }, []);
 
@@ -279,7 +280,8 @@ export default function SchedulePage() {
           {/* Stats row */}
           {(() => {
             const activeCount = scheduledCount + draftCount;
-            const atLimit = tier === 'free' && activeCount >= 3;
+            const isFree = !tierLoading && tier === 'free';
+            const atLimit = isFree && activeCount >= 3;
             return (
               <div style={{
                 display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)',
@@ -287,7 +289,7 @@ export default function SchedulePage() {
                 borderRadius: 14, overflow: 'hidden', marginBottom: 20,
               }}>
                 {[
-                  { label: 'Active', value: activeCount, color: atLimit ? '#FF4757' : 'var(--text)', limit: tier === 'free' },
+                  { label: 'Active', value: activeCount, color: atLimit ? '#FF4757' : 'var(--text)', limit: isFree },
                   { label: 'Scheduled', value: scheduledCount, color: '#22c55e', limit: false },
                   { label: 'Drafts', value: draftCount, color: '#FFB020', limit: false },
                 ].map((s, i) => (
