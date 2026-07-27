@@ -415,75 +415,75 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPubli
   onToggleStatus: () => void;
   onPublish: () => void;
 }) {
-  const status = STATUS_CONFIG[post.status];
   const isEditable = post.status === 'draft' || post.status === 'scheduled';
+  const statusColor: Record<string, string> = {
+    scheduled: '#22c55e', draft: '#FFB020', publishing: '#4ade80', published: '#22c55e', failed: '#FF4757',
+  };
+  const accent = statusColor[post.status] ?? '#666';
 
   return (
     <div style={{
-      backgroundColor: 'var(--surface)', border: '1px solid',
-      borderColor: post.status === 'published' ? 'rgba(34,197,94,0.2)' : post.status === 'failed' ? 'rgba(255,71,87,0.2)' : 'var(--border)',
-      borderRadius: 14, padding: '16px 20px',
-      display: 'flex', gap: 16, alignItems: 'flex-start',
+      backgroundColor: 'var(--surface)',
+      border: '1px solid var(--border)',
+      borderLeft: `3px solid ${accent}`,
+      borderRadius: 12,
+      padding: '14px 16px',
+      display: 'flex', gap: 14, alignItems: 'flex-start',
     }}>
+      {/* Media preview */}
       <div style={{
-        width: 72, height: 88, borderRadius: 10, flexShrink: 0,
-        backgroundColor: 'var(--surface-light)', border: '1px solid var(--border)',
+        width: 60, height: 78, borderRadius: 8, flexShrink: 0,
+        backgroundColor: 'var(--bg)', overflow: 'hidden',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
-        {post.mediaName ? (
-          <span style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', padding: 4, wordBreak: 'break-all' }}>
-            {post.mediaName.split('.').pop()?.toUpperCase()}
-          </span>
+        {post.mediaUrl ? (
+          post.contentType === 'video'
+            ? <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted preload="metadata" />
+            : <img src={post.mediaUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>{post.contentType}</span>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{post.contentType}</span>
         )}
       </div>
 
+      {/* Content */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, textTransform: 'capitalize' }}>{post.contentType}</span>
-            <span style={{
-              fontSize: 10, fontWeight: 700, letterSpacing: 0.3,
-              padding: '2px 8px', borderRadius: 100,
-              backgroundColor: status.bg, color: status.color,
-            }}>{status.label.toUpperCase()}</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 7 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+            {post.platforms.map(p => (
+              <span key={p} style={{
+                width: 8, height: 8, borderRadius: '50%',
+                backgroundColor: PLATFORM_COLORS[p] ?? '#666',
+                display: 'inline-block',
+              }} />
+            ))}
+            <span style={{ fontSize: 11, color: 'var(--text-muted)', marginLeft: 2, textTransform: 'capitalize' }}>
+              {post.platforms.join(', ')}
+            </span>
           </div>
           <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>{formatScheduledDate(post.scheduledDate)}</span>
         </div>
 
-        <div style={{ display: 'flex', gap: 6, marginBottom: post.caption ? 8 : 0 }}>
-          {post.platforms.map(p => (
-            <span key={p} style={{
-              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 100,
-              backgroundColor: `${PLATFORM_COLORS[p]}18`, color: PLATFORM_COLORS[p],
-              border: `1px solid ${PLATFORM_COLORS[p]}40`, textTransform: 'capitalize',
-            }}>{p}</span>
-          ))}
-        </div>
+        <p style={{
+          fontSize: 13, lineHeight: 1.5, marginBottom: 12,
+          color: post.caption ? 'var(--text)' : 'var(--text-muted)',
+          overflow: 'hidden', display: '-webkit-box',
+          WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+        }}>
+          {post.caption || `No caption · ${post.contentType}`}
+        </p>
 
-        {post.caption && (
-          <p style={{
-            fontSize: 13, color: 'var(--text-sub)', lineHeight: 1.5, marginBottom: 10,
-            overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
-          }}>{post.caption}</p>
-        )}
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14, paddingTop: 8, borderTop: '1px solid var(--border)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           {isEditable && <button onClick={onEdit} style={actionBtnStyle}>Edit</button>}
-          <button onClick={onDuplicate} style={actionBtnStyle}>Duplicate</button>
           {isEditable && (
             <button onClick={onToggleStatus} style={{ ...actionBtnStyle, color: post.status === 'draft' ? '#22c55e' : '#FFB020' }}>
-              {post.status === 'draft' ? 'Schedule' : 'Move to draft'}
+              {post.status === 'draft' ? 'Schedule' : 'Draft'}
             </button>
           )}
           {post.status === 'scheduled' && post.platforms.includes('tiktok') && (
-            <button onClick={onPublish} style={{ ...actionBtnStyle, color: '#FF004F', fontWeight: 700 }}>
-              Post Now
-            </button>
+            <button onClick={onPublish} style={{ ...actionBtnStyle, color: '#FF004F' }}>Post Now</button>
           )}
           <div style={{ flex: 1 }} />
-          <button onClick={onDelete} style={{ ...actionBtnStyle, color: '#FF4757' }}>Delete</button>
+          <button onClick={onDelete} style={{ ...actionBtnStyle, color: 'var(--text-muted)', opacity: 0.5 }}>Delete</button>
         </div>
       </div>
     </div>
