@@ -8,6 +8,10 @@ import { supabase } from '@/lib/supabase';
 
 type PlatformConnection = { id: string; platform: string; platform_username: string | null };
 
+const PLATFORM_COLORS: Record<string, string> = {
+  tiktok: '#FF004F', instagram: '#E1306C', youtube: '#FF0000',
+};
+
 const PLATFORM_META: Record<string, { bg: string; icon: React.ReactNode }> = {
   tiktok: {
     bg: '#010101',
