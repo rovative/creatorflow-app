@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { ScheduledPost, ContentType, SocialPlatform } from '@/lib/posts';
 import { getActiveProfile } from '@/lib/profiles';
 import { supabase } from '@/lib/supabase';
@@ -33,6 +33,11 @@ export default function PostModal({ post, onSave, onClose }: Props) {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
+
+  const mediaObjectUrl = useMemo(() => {
+    if (!mediaFile) return '';
+    return URL.createObjectURL(mediaFile);
+  }, [mediaFile]);
   const [status, setStatus] = useState<'draft' | 'scheduled'>(
     post?.status === 'draft' ? 'draft' : 'scheduled'
   );
@@ -159,9 +164,9 @@ export default function PostModal({ post, onSave, onClose }: Props) {
               <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
                 {mediaFile ? (
                   mediaFile.type.startsWith('video/') ? (
-                    <video src={URL.createObjectURL(mediaFile)} controls style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                    <video src={mediaObjectUrl} controls style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
                   ) : (
-                    <img src={URL.createObjectURL(mediaFile)} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                    <img src={mediaObjectUrl} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
                   )
                 ) : mediaUrl ? (
                   /\.(mp4|mov|webm|avi)(\?|$)/i.test(mediaUrl) ? (
