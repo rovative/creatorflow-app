@@ -60,6 +60,7 @@ export default function ProfilesPage() {
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [toast, setToast] = useState<string | null>(null);
   const [openPopup, setOpenPopup] = useState<string | null>(null);
+  const [confirmingDisconnect, setConfirmingDisconnect] = useState(false);
 
   useEffect(() => {
     if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t); }
@@ -318,7 +319,7 @@ export default function ProfilesPage() {
         if (!conn) return null;
         return (
           <div
-            onClick={() => setOpenPopup(null)}
+            onClick={() => { setOpenPopup(null); setConfirmingDisconnect(false); }}
             style={{
               position: 'fixed', inset: 0, zIndex: 300,
               backgroundColor: 'rgba(0,0,0,0.6)',
@@ -330,7 +331,7 @@ export default function ProfilesPage() {
               style={{
                 backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
                 borderRadius: 20, width: '100%', maxWidth: 340, padding: '28px 28px 24px',
-                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+                display: 'flex', flexDirection: 'column', alignItems: 'center',
               }}
             >
               <div style={{
@@ -350,27 +351,53 @@ export default function ProfilesPage() {
                 backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)',
                 borderRadius: 100, padding: '3px 12px', marginBottom: 24,
               }}>Connected</div>
-              <button
-                onClick={async () => {
-                  if (confirm(`Disconnect ${platform}?`)) {
-                    await handleDisconnect(platform);
-                    setOpenPopup(null);
-                  }
-                }}
-                style={{
-                  width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 700,
-                  backgroundColor: 'rgba(255,71,87,0.08)', color: '#FF4757',
-                  border: '1px solid rgba(255,71,87,0.25)', cursor: 'pointer', marginBottom: 8,
-                }}
-              >Disconnect</button>
-              <button
-                onClick={() => setOpenPopup(null)}
-                style={{
-                  width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 600,
-                  backgroundColor: 'transparent', color: 'var(--text-muted)',
-                  border: '1px solid var(--border)', cursor: 'pointer',
-                }}
-              >Close</button>
+
+              {confirmingDisconnect ? (
+                <>
+                  <p style={{ fontSize: 13, color: 'var(--text-sub)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
+                    Are you sure? You can reconnect at any time.
+                  </p>
+                  <button
+                    onClick={async () => {
+                      await handleDisconnect(platform);
+                      setOpenPopup(null);
+                      setConfirmingDisconnect(false);
+                    }}
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                      backgroundColor: '#FF4757', color: '#fff',
+                      border: 'none', cursor: 'pointer', marginBottom: 8,
+                    }}
+                  >Yes, disconnect</button>
+                  <button
+                    onClick={() => setConfirmingDisconnect(false)}
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 600,
+                      backgroundColor: 'transparent', color: 'var(--text-muted)',
+                      border: '1px solid var(--border)', cursor: 'pointer',
+                    }}
+                  >Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setConfirmingDisconnect(true)}
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                      backgroundColor: 'rgba(255,71,87,0.08)', color: '#FF4757',
+                      border: '1px solid rgba(255,71,87,0.25)', cursor: 'pointer', marginBottom: 8,
+                    }}
+                  >Disconnect</button>
+                  <button
+                    onClick={() => { setOpenPopup(null); setConfirmingDisconnect(false); }}
+                    style={{
+                      width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 600,
+                      backgroundColor: 'transparent', color: 'var(--text-muted)',
+                      border: '1px solid var(--border)', cursor: 'pointer',
+                    }}
+                  >Close</button>
+                </>
+              )}
             </div>
           </div>
         );
