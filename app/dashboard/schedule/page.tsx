@@ -415,6 +415,7 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPubli
   onToggleStatus: () => void;
   onPublish: () => void;
 }) {
+  const [playing, setPlaying] = useState(false);
   const isEditable = post.status === 'draft' || post.status === 'scheduled';
   const statusColor: Record<string, string> = {
     scheduled: '#22c55e', draft: '#FFB020', publishing: '#4ade80', published: '#22c55e', failed: '#FF4757',
@@ -437,9 +438,32 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPubli
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {post.mediaUrl ? (
-          post.contentType === 'video'
-            ? <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted preload="metadata" />
-            : <img src={post.mediaUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          post.contentType === 'video' ? (
+            <div style={{ position: 'relative', width: '100%', height: '100%' }} onClick={() => setPlaying(p => !p)}>
+              <video
+                src={post.mediaUrl}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                muted={!playing} autoPlay={playing} loop controls={playing}
+                preload="metadata"
+              />
+              {!playing && (
+                <div style={{
+                  position: 'absolute', inset: 0,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.3)', cursor: 'pointer',
+                }}>
+                  <div style={{
+                    width: 22, height: 22, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.9)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #000', marginLeft: 2 }} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <img src={post.mediaUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          )
         ) : (
           <span style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'capitalize' }}>{post.contentType}</span>
         )}

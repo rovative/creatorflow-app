@@ -5,6 +5,7 @@ import { ScheduledPost, ContentType, SocialPlatform } from '@/lib/posts';
 import { getActiveProfile } from '@/lib/profiles';
 import { supabase } from '@/lib/supabase';
 import DateTimePicker from '@/components/DateTimePicker';
+import MediaEditor from '@/components/MediaEditor';
 
 const PLATFORMS: { id: SocialPlatform; label: string; color: string }[] = [
   { id: 'instagram', label: 'Instagram', color: '#E1306C' },
@@ -31,6 +32,7 @@ export default function PostModal({ post, onSave, onClose }: Props) {
   const [mediaUrl, setMediaUrl] = useState(post?.mediaUrl ?? '');
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
   const [status, setStatus] = useState<'draft' | 'scheduled'>(
     post?.status === 'draft' ? 'draft' : 'scheduled'
   );
@@ -153,18 +155,41 @@ export default function PostModal({ post, onSave, onClose }: Props) {
           {/* Media upload */}
           <div>
             <label style={labelStyle}>Media</label>
-            <label style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              backgroundColor: 'var(--bg)', border: `2px dashed ${mediaName ? 'var(--primary)' : 'var(--border)'}`,
-              borderRadius: 12, padding: '24px', cursor: 'pointer', textAlign: 'center',
-              flexDirection: 'column', gap: 6,
-            }}>
-              <input type="file" accept="image/*,video/*" onChange={handleFileChange} style={{ display: 'none' }} />
-              <span style={{ fontSize: 13, fontWeight: 600, color: mediaName ? 'var(--primary)' : 'var(--text-sub)' }}>
-                {mediaName || 'Click to upload photo or video'}
-              </span>
-              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>JPG, PNG, MP4, MOV</span>
-            </label>
+            {mediaFile ? (
+              <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
+                {mediaFile.type.startsWith('video/') ? (
+                  <video src={URL.createObjectURL(mediaFile)} controls style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                ) : (
+                  <img src={URL.createObjectURL(mediaFile)} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                )}
+                <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid var(--border)' }}>
+                  <button type="button" onClick={() => setShowEditor(true)} style={{
+                    flex: 1, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                    backgroundColor: 'var(--primary-alpha)', color: 'var(--primary)',
+                    border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer',
+                  }}>Edit media</button>
+                  <label style={{
+                    flex: 1, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                    backgroundColor: 'var(--surface)', color: 'var(--text-sub)',
+                    border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'center',
+                  }}>
+                    Replace
+                    <input type="file" accept="image/*,video/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                  </label>
+                </div>
+              </div>
+            ) : (
+              <label style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                backgroundColor: 'var(--bg)', border: `2px dashed var(--border)`,
+                borderRadius: 12, padding: '32px 24px', cursor: 'pointer', textAlign: 'center',
+                flexDirection: 'column', gap: 6,
+              }}>
+                <input type="file" accept="image/*,video/*" onChange={handleFileChange} style={{ display: 'none' }} />
+                <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-sub)' }}>Click to upload photo or video</span>
+                <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>JPG, PNG, MP4, MOV</span>
+              </label>
+            )}
           </div>
 
           {/* Caption */}
@@ -274,6 +299,13 @@ export default function PostModal({ post, onSave, onClose }: Props) {
           </div>
         </form>
       </div>
+    {showEditor && mediaFile && (
+      <MediaEditor
+        file={mediaFile}
+        onSave={f => { setMediaFile(f); setMediaName(f.name); setMediaUrl(''); setShowEditor(false); }}
+        onClose={() => setShowEditor(false)}
+      />
+    )}
     </div>
   );
 }
