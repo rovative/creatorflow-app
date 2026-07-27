@@ -68,7 +68,7 @@ export default function MediaEditor({ file, onSave, onClose }: Props) {
         if (handle === 'sw') { x = Math.min(x + w - 10, x + dx); w = Math.max(10, w - dx); h = Math.max(10, Math.min(100 - y, h + dy)); }
         if (handle === 'se') { w = Math.max(10, Math.min(100 - x, w + dx)); h = Math.max(10, Math.min(100 - y, h + dy)); }
 
-        if (lockedAspect !== null && handle !== 'move') {
+        if (lockedAspect !== null) {
           h = w / lockedAspect;
           if (y + h > 100) { h = 100 - y; w = h * lockedAspect; }
         }
