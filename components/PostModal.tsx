@@ -128,7 +128,7 @@ export default function PostModal({ post, onSave, onClose }: Props) {
       position: 'fixed', inset: 0, zIndex: 200,
       backgroundColor: 'rgba(0,0,0,0.75)',
       display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
-    }} onClick={e => e.target === e.currentTarget && onClose()}>
+    }}>
       <div style={{
         backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
         borderRadius: 20, width: '100%', maxWidth: 580,
