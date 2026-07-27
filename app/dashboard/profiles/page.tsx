@@ -55,6 +55,7 @@ export default function ProfilesPage() {
   const [editing, setEditing] = useState<CreatorProfile | null>(null);
   const [connections, setConnections] = useState<PlatformConnection[]>([]);
   const [toast, setToast] = useState<string | null>(null);
+  const [openPopup, setOpenPopup] = useState<string | null>(null);
 
   useEffect(() => {
     if (toast) { const t = setTimeout(() => setToast(null), 4000); return () => clearTimeout(t); }
@@ -221,25 +222,14 @@ export default function ProfilesPage() {
 
                         {/* Right side */}
                         {conn ? (
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                            {conn.platform_username && (
-                              <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>@{conn.platform_username}</span>
-                            )}
-                            <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', letterSpacing: 0.2 }}>Connected</span>
-                            <button
-                              onClick={() => confirm(`Disconnect ${platform}?`) && handleDisconnect(platform)}
-                              title="Disconnect"
-                              style={{
-                                width: 16, height: 16, borderRadius: 4,
-                                border: '1px solid var(--border)',
-                                backgroundColor: 'var(--bg)',
-                                color: 'var(--text-muted)',
-                                cursor: 'pointer', fontSize: 11, lineHeight: 1,
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                padding: 0, flexShrink: 0,
-                              }}
-                            >×</button>
-                          </div>
+                          <button
+                            onClick={() => setOpenPopup(platform)}
+                            style={{
+                              fontSize: 11, fontWeight: 700, color: '#22c55e',
+                              background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.25)',
+                              borderRadius: 6, padding: '3px 10px', cursor: 'pointer',
+                            }}
+                          >Connected</button>
                         ) : platform === 'tiktok' ? (
                           <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
                             fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 7,
@@ -316,6 +306,71 @@ export default function ProfilesPage() {
       {showModal && (
         <EditProfileModal profile={editing} onSave={handleSave} onClose={closeModal} />
       )}
+
+      {openPopup && (() => {
+        const platform = openPopup;
+        const conn = connections.find(c => c.platform === platform);
+        const meta = PLATFORM_META[platform];
+        if (!conn) return null;
+        return (
+          <div
+            onClick={() => setOpenPopup(null)}
+            style={{
+              position: 'fixed', inset: 0, zIndex: 300,
+              backgroundColor: 'rgba(0,0,0,0.6)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24,
+            }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{
+                backgroundColor: 'var(--surface)', border: '1px solid var(--border)',
+                borderRadius: 20, width: '100%', maxWidth: 340, padding: '28px 28px 24px',
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
+              }}
+            >
+              <div style={{
+                width: 56, height: 56, borderRadius: 14,
+                background: meta.bg,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 14,
+              }}>
+                <div style={{ transform: 'scale(2)' }}>{meta.icon}</div>
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 800, textTransform: 'capitalize', marginBottom: 4 }}>{platform}</div>
+              {conn.platform_username && (
+                <div style={{ fontSize: 14, color: 'var(--text-muted)', marginBottom: 6 }}>@{conn.platform_username}</div>
+              )}
+              <div style={{
+                fontSize: 11, fontWeight: 700, color: '#22c55e',
+                backgroundColor: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.2)',
+                borderRadius: 100, padding: '3px 12px', marginBottom: 24,
+              }}>Connected</div>
+              <button
+                onClick={async () => {
+                  if (confirm(`Disconnect ${platform}?`)) {
+                    await handleDisconnect(platform);
+                    setOpenPopup(null);
+                  }
+                }}
+                style={{
+                  width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 700,
+                  backgroundColor: 'rgba(255,71,87,0.08)', color: '#FF4757',
+                  border: '1px solid rgba(255,71,87,0.25)', cursor: 'pointer', marginBottom: 8,
+                }}
+              >Disconnect</button>
+              <button
+                onClick={() => setOpenPopup(null)}
+                style={{
+                  width: '100%', padding: '11px', borderRadius: 10, fontSize: 14, fontWeight: 600,
+                  backgroundColor: 'transparent', color: 'var(--text-muted)',
+                  border: '1px solid var(--border)', cursor: 'pointer',
+                }}
+              >Close</button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
