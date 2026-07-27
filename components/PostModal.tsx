@@ -155,25 +155,35 @@ export default function PostModal({ post, onSave, onClose }: Props) {
           {/* Media upload */}
           <div>
             <label style={labelStyle}>Media</label>
-            {mediaFile ? (
+            {(mediaFile || mediaUrl) ? (
               <div style={{ position: 'relative', borderRadius: 12, overflow: 'hidden', backgroundColor: 'var(--bg)', border: '1px solid var(--border)' }}>
-                {mediaFile.type.startsWith('video/') ? (
-                  <video src={URL.createObjectURL(mediaFile)} controls style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
-                ) : (
-                  <img src={URL.createObjectURL(mediaFile)} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
-                )}
+                {mediaFile ? (
+                  mediaFile.type.startsWith('video/') ? (
+                    <video src={URL.createObjectURL(mediaFile)} controls style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                  ) : (
+                    <img src={URL.createObjectURL(mediaFile)} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                  )
+                ) : mediaUrl ? (
+                  /\.(mp4|mov|webm|avi)(\?|$)/i.test(mediaUrl) ? (
+                    <video src={mediaUrl} controls style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                  ) : (
+                    <img src={mediaUrl} alt="" style={{ width: '100%', maxHeight: 260, objectFit: 'contain', display: 'block' }} />
+                  )
+                ) : null}
                 <div style={{ display: 'flex', gap: 8, padding: '10px 12px', borderTop: '1px solid var(--border)' }}>
-                  <button type="button" onClick={() => setShowEditor(true)} style={{
-                    flex: 1, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 700,
-                    backgroundColor: 'var(--primary-alpha)', color: 'var(--primary)',
-                    border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer',
-                  }}>Edit media</button>
+                  {mediaFile && (
+                    <button type="button" onClick={() => setShowEditor(true)} style={{
+                      flex: 1, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 700,
+                      backgroundColor: 'var(--primary-alpha)', color: 'var(--primary)',
+                      border: '1px solid rgba(34,197,94,0.3)', cursor: 'pointer',
+                    }}>Edit media</button>
+                  )}
                   <label style={{
                     flex: 1, padding: '7px', borderRadius: 8, fontSize: 12, fontWeight: 700,
                     backgroundColor: 'var(--surface)', color: 'var(--text-sub)',
                     border: '1px solid var(--border)', cursor: 'pointer', textAlign: 'center',
                   }}>
-                    Replace
+                    {mediaFile ? 'Replace' : 'Replace media'}
                     <input type="file" accept="image/*,video/*" onChange={handleFileChange} style={{ display: 'none' }} />
                   </label>
                 </div>
