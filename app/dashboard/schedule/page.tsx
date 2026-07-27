@@ -423,6 +423,34 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPubli
   const accent = statusColor[post.status] ?? '#666';
 
   return (
+    <>
+    {/* Video lightbox */}
+    {playing && post.mediaUrl && (
+      <div
+        onClick={() => setPlaying(false)}
+        style={{
+          position: 'fixed', inset: 0, zIndex: 400,
+          backgroundColor: 'rgba(0,0,0,0.9)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}
+      >
+        <button onClick={() => setPlaying(false)} style={{
+          position: 'absolute', top: 20, right: 24,
+          background: 'rgba(255,255,255,0.12)', border: 'none',
+          color: '#fff', fontSize: 22, cursor: 'pointer',
+          width: 40, height: 40, borderRadius: '50%',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+        }}>×</button>
+        <video
+          src={post.mediaUrl}
+          controls
+          autoPlay
+          onClick={e => e.stopPropagation()}
+          style={{ maxWidth: '90vw', maxHeight: '85vh', borderRadius: 12 }}
+        />
+      </div>
+    )}
+
     <div style={{
       backgroundColor: 'var(--surface)',
       border: '1px solid var(--border)',
@@ -438,25 +466,14 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPubli
         display: 'flex', alignItems: 'center', justifyContent: 'center',
       }}>
         {post.mediaUrl ? (
-          <div style={{ position: 'relative', width: '100%', height: '100%', cursor: 'pointer' }} onClick={() => setPlaying(true)}>
+          <div
+            style={{ width: '100%', height: '100%', cursor: 'pointer' }}
+            onClick={() => post.contentType === 'video' && setPlaying(true)}
+          >
             {post.contentType === 'video' ? (
-              <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} muted preload="metadata" />
+              <video src={post.mediaUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} muted preload="metadata" />
             ) : (
-              <img src={post.mediaUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            )}
-            {post.contentType === 'video' && (
-              <div style={{
-                position: 'absolute', inset: 0,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                backgroundColor: 'rgba(0,0,0,0.25)',
-              }}>
-                <div style={{
-                  width: 22, height: 22, borderRadius: '50%', backgroundColor: 'rgba(255,255,255,0.9)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}>
-                  <div style={{ width: 0, height: 0, borderTop: '5px solid transparent', borderBottom: '5px solid transparent', borderLeft: '8px solid #000', marginLeft: 2 }} />
-                </div>
-              </div>
+              <img src={post.mediaUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             )}
           </div>
         ) : (
@@ -506,6 +523,7 @@ function PostCard({ post, onEdit, onDelete, onDuplicate, onToggleStatus, onPubli
         </div>
       </div>
     </div>
+    </>
   );
 }
 
