@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
 
   const params = new URLSearchParams({
     client_key: clientKey,
-    scope: 'user.info.basic',
+    scope: 'user.info.basic,video.upload,video.publish',
     response_type: 'code',
     redirect_uri: redirectUri,
     state,
