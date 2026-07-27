@@ -213,23 +213,8 @@ export default function ProfilesPage() {
                           {meta.icon}
                         </div>
 
-                        {/* Name + disconnect X */}
+                        {/* Name */}
                         <span style={{ fontSize: 13, fontWeight: 600, textTransform: 'capitalize' }}>{platform}</span>
-                        {conn && (
-                          <button
-                            onClick={() => confirm(`Disconnect ${platform}?`) && handleDisconnect(platform)}
-                            title="Disconnect"
-                            style={{
-                              width: 16, height: 16, borderRadius: 4,
-                              border: '1px solid var(--border)',
-                              backgroundColor: 'var(--bg)',
-                              color: 'var(--text-muted)',
-                              cursor: 'pointer', fontSize: 11, lineHeight: 1,
-                              display: 'flex', alignItems: 'center', justifyContent: 'center',
-                              padding: 0, flexShrink: 0,
-                            }}
-                          >×</button>
-                        )}
 
                         {/* Spacer */}
                         <div style={{ flex: 1 }} />
@@ -241,6 +226,19 @@ export default function ProfilesPage() {
                               <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>@{conn.platform_username}</span>
                             )}
                             <span style={{ fontSize: 11, fontWeight: 700, color: '#22c55e', letterSpacing: 0.2 }}>Connected</span>
+                            <button
+                              onClick={() => confirm(`Disconnect ${platform}?`) && handleDisconnect(platform)}
+                              title="Disconnect"
+                              style={{
+                                width: 16, height: 16, borderRadius: 4,
+                                border: '1px solid var(--border)',
+                                backgroundColor: 'var(--bg)',
+                                color: 'var(--text-muted)',
+                                cursor: 'pointer', fontSize: 11, lineHeight: 1,
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                padding: 0, flexShrink: 0,
+                              }}
+                            >×</button>
                           </div>
                         ) : platform === 'tiktok' ? (
                           <a href={`/api/auth/tiktok?profileId=${active.id}`} style={{
